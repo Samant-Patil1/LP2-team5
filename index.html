@@ -580,66 +580,64 @@
     .fc-modal-overlay {
       position: fixed; inset: 0; background: rgba(20, 20, 30, 0.45);
       display: flex; align-items: center; justify-content: center;
-      z-index: 1000; padding: 20px; opacity: 0; pointer-events: none;
+      z-index: 1000; padding: 16px; opacity: 0; pointer-events: none;
       transition: opacity 0.25s ease;
     }
     .fc-modal-overlay.open { opacity: 1; pointer-events: auto; }
     .fc-modal {
-      width: min(640px, 100%); max-height: 90vh; background: var(--surface);
-      border-radius: 18px; box-shadow: 0 25px 80px rgba(0,0,0,0.18);
+      width: min(560px, 100%); max-height: min(720px, 92vh); background: var(--surface);
+      border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.18);
       display: flex; flex-direction: column; overflow: hidden;
-      transform: scale(0.92); transition: transform 0.25s ease;
+      transform: scale(0.95); transition: transform 0.2s ease;
     }
     .fc-modal-overlay.open .fc-modal { transform: scale(1); }
     .fc-modal-header {
       background: var(--primary); color: white;
-      padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
     }
-    .fc-modal-title { font-weight: 700; font-size: 16px; line-height: 1.4; }
-    .fc-modal-counter { font-size: 12px; font-weight: 600; opacity: 0.9; margin-left: 16px; }
+    .fc-modal-title { font-weight: 700; font-size: 14px; line-height: 1.35; }
+    .fc-modal-counter { font-size: 11px; font-weight: 600; opacity: 0.9; margin-left: 12px; white-space: nowrap; }
     .fc-modal-close {
-      width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15);
-      color: white; cursor: pointer; display: grid; place-items: center;
+      width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15);
+      color: white; cursor: pointer; display: grid; place-items: center; font-size: 13px;
     }
-    .fc-modal-body { padding: 24px; overflow: auto; flex: 1; }
+    .fc-modal-body { padding: 16px 18px; overflow: auto; flex: 1; }
     .fc-modal-question {
-      font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 18px;
+      font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 12px;
     }
-    .fc-modal-input-wrap { margin-bottom: 16px; }
+    .fc-modal-input-wrap { margin-bottom: 12px; }
     .fc-modal-input {
-      width: 100%; min-height: 120px; border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px; font-size: 14px; line-height: 1.6; font-family: inherit; resize: vertical;
+      width: 100%; min-height: 64px; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 10px 12px; font-size: 13px; line-height: 1.5; font-family: inherit; resize: vertical;
       outline: none;
     }
     .fc-modal-input:focus { border-color: var(--primary); }
-    .fc-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .fc-modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
     .fc-modal-btn {
-      padding: 10px 18px; border-radius: 999px; border: none; font-weight: 600; font-size: 13px; cursor: pointer;
+      padding: 8px 14px; border-radius: 999px; border: none; font-weight: 600; font-size: 12px; cursor: pointer;
     }
     .fc-modal-btn.primary { background: var(--primary); color: white; }
     .fc-modal-btn.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 
-    .fc-modal-back {
-      display: none;
-    }
+    .fc-modal-back { display: none; }
     .fc-modal.flipped .fc-modal-front { display: none; }
     .fc-modal.flipped .fc-modal-back { display: block; }
 
     .fc-modal-answer-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-      color: var(--text-muted); margin-bottom: 6px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted); margin-bottom: 4px;
     }
     .fc-modal-user-answer {
-      background: var(--primary-soft); border-radius: var(--radius); padding: 12px 14px;
-      font-size: 14px; color: var(--text); margin-bottom: 16px; line-height: 1.5;
+      background: var(--primary-soft); border-radius: var(--radius); padding: 8px 12px;
+      font-size: 13px; color: var(--text); margin-bottom: 10px; line-height: 1.45;
     }
     .fc-modal-correct {
       background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius);
-      padding: 14px; font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 16px;
+      padding: 10px 12px; font-size: 13px; color: var(--text); line-height: 1.5; margin-bottom: 10px;
     }
-    .fc-modal-keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+    .fc-modal-keywords { display: flex; flex-wrap: wrap; gap: 5px; }
     .fc-keyword {
-      padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
     }
     .fc-keyword.missed { background: #fee2e2; color: #991b1b; }
     .fc-keyword.hit { background: #d1fae5; color: #065f46; }
