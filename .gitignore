@@ -1,0 +1,10 @@
+.DS_Store
+*.mov
+*.png
+*.jpg
+*.jpeg
+index.html.bak
+snapshot.json
+test.pdf
+.venv/
+.env

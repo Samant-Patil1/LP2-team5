@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Argus | EuroSchool - Discover Yourself</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+  <style>
+    :root {
+      --bg: #f3f7f9;
+      --surface: #ffffff;
+      --text: #354060;
+      --text-muted: rgba(0,0,0,0.55);
+      --text-light: #8b95a8;
+      --border: #e6ebf0;
+      --border-strong: #d0d7e0;
+      --primary: #7c3aed;
+      --primary-light: #ede9fe;
+      --primary-soft: #f5f3ff;
+      --blue: #3684cc;
+      --blue-light: #e8f4fd;
+      --orange: #cc7f0b;
+      --orange-light: #fff7e6;
+      --green: #3f9161;
+      --green-light: #e8f5ed;
+      --red: #ef4444;
+      --radius-sm: 8px;
+      --radius: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(53,64,96,0.06);
+      --shadow: 0 4px 16px rgba(53,64,96,0.08);
+      --sidebar-width: 248px;
+      --topbar-height: 72px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    /* Layout */
+    .app { display: flex; height: 100vh; overflow: hidden; }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      padding: 18px 14px;
+    }
+    .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+    .topbar {
+      height: var(--topbar-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+    .content {
+      flex: 1;
+      overflow: auto;
+      padding: 22px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Sidebar */
+    .sidebar-logo {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 18px;
+      padding-left: 6px;
+    }
+    .sidebar-logo svg { height: 36px; width: auto; }
+    .nav { flex: 1; overflow-y: auto; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 10px;
+      color: rgba(0,0,0,0.75); cursor: pointer; margin-bottom: 4px;
+      transition: .15s; position: relative; font-weight: 500; font-size: 13.5px;
+    }
+    .nav-item:hover { background: #f8fafc; color: var(--text); }
+    .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-item svg { width: 20px; height: 20px; flex-shrink: 0; opacity: 0.85; }
+    .nav-item.active svg { opacity: 1; }
+    .nav-badge {
+      margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+      background: var(--green-light); color: var(--green); text-transform: uppercase; letter-spacing: .03em;
+    }
+    .nav-chevron { margin-left: auto; opacity: 0.4; }
+
+    /* Topbar */
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-greeting {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .topbar-greeting h1 {
+      font-size: 20px; font-weight: 700; margin: 0; color: var(--text);
+    }
+    .badge-present {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--green); color: var(--green); background: var(--green-light);
+    }
+    .topbar-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      border: 1.5px solid var(--primary); border-radius: 999px;
+      padding: 7px 14px; font-size: 13px; font-weight: 600;
+      color: var(--primary); background: var(--surface); cursor: pointer; transition: .15s;
+    }
+    .topbar-btn:hover { background: var(--primary-soft); }
+    .topbar-btn.secondary { border-color: var(--border-strong); color: var(--text); }
+    .topbar-btn.secondary:hover { background: #f8fafc; }
+    .topbar-btn .icon { width: 18px; height: 18px; }
+    .notif-btn {
+      position: relative; width: 40px; height: 40px; border-radius: 50%;
+      display: grid; place-items: center; border: none; background: transparent; cursor: pointer;
+    }
+    .notif-btn:hover { background: #f8fafc; }
+    .notif-badge {
+      position: absolute; top: 4px; right: 5px;
+      background: var(--red); color: white; font-size: 9px; font-weight: 700;
+      min-width: 16px; height: 16px; border-radius: 999px; display: grid; place-items: center;
+      border: 2px solid var(--surface);
+    }
+    .euros-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 700; color: #d97706; font-size: 13px;
+      background: #fffbeb; padding: 6px 12px; border-radius: 999px;
+    }
+    .profile-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: #e2e8f0; display: grid; place-items: center;
+      color: var(--text-light); cursor: pointer;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 20px 14px;
+    }
+    .card-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .card-title { font-size: 18px; font-weight: 700; color: var(--text); }
+    .card-title svg { width: 18px; height: 18px; color: var(--text-light); cursor: pointer; }
+    .card-link { font-size: 13px; font-weight: 600; color: var(--primary); cursor: pointer; text-decoration: none; }
+    .card-link:hover { text-decoration: underline; }
+
+    /* Dashboard grid */
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 360px; gap: 22px; }
+    .dashboard-main { min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+    .dashboard-side { display: flex; flex-direction: column; gap: 18px; }
+
+    /* Feature highlights */
+    .feature-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .feature-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 18px; display: flex; align-items: flex-start; gap: 14px;
+      box-shadow: var(--shadow-sm); transition: .15s;
+    }
+    .feature-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow); }
+    .feature-icon {
+      width: 46px; height: 46px; border-radius: var(--radius-sm); display: grid; place-items: center; flex-shrink: 0;
+    }
+    .feature-icon.green { background: var(--green-light); color: var(--green); }
+    .feature-icon.purple { background: var(--primary-light); color: var(--primary); }
+    .feature-body { flex: 1; }
+    .feature-title { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .feature-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .badge-new {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+      background: var(--green-light); color: var(--green); text-transform: uppercase; letter-spacing: .03em;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: none; border-radius: 8px; padding: 8px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: #6d28d9; }
+    .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #f8fafc; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    /* Section header controls */
+    .section-controls { display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--surface); display: grid; place-items: center; cursor: pointer; color: var(--text-light);
+    }
+    .icon-btn:hover { background: #f8fafc; color: var(--text); }
+
+    /* Learning Journey */
+    .lj-header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 14px; }
+    .lj-title { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .lj-title svg { color: var(--text-light); width: 18px; height: 18px; }
+    .lj-controls { display: flex; align-items: center; gap: 10px; }
+    .lj-row { display: flex; gap: 16px; }
+    .subject-card {
+      flex: 1; min-width: 260px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px; box-shadow: var(--shadow-sm);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .subject-header { display: flex; align-items: flex-start; gap: 12px; }
+    .subject-thumb {
+      width: 52px; height: 52px; border-radius: 12px; background: #fef2f2;
+      display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
+    }
+    .subject-thumb.bio { background: #f0fdf4; }
+    .subject-thumb.geo { background: #fffbeb; }
+    .subject-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+    .subject-teacher { font-size: 12px; color: var(--text-muted); }
+    .topic-list { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 6px; }
+    .topic-item {
+      display: flex; align-items: flex-start; gap: 10px; padding: 10px 0;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .topic-item:last-child { border-bottom: none; }
+    .topic-dot {
+      width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+      border: 2px solid currentColor;
+    }
+    .topic-dot.completed { background: var(--green); border-color: var(--green); }
+    .topic-dot.pending { background: transparent; border-color: var(--blue); }
+    .topic-dot.progress { background: var(--orange); border-color: var(--orange); }
+    .topic-info { flex: 1; min-width: 0; }
+    .topic-title { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .topic-status { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .topic-status.yet { color: var(--blue); }
+    .topic-status.progress { color: var(--orange); }
+    .topic-status.completed { color: var(--green); }
+    .topic-arrow { color: var(--text-light); margin-top: 2px; }
+    .subject-actions { display: flex; gap: 10px; margin-top: auto; }
+    .subject-actions button {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface);
+      font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer;
+    }
+    .subject-actions button:hover { background: #f8fafc; }
+
+    /* Podcasts */
+    .podcast-header { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 14px; }
+    .podcast-title-block { display: flex; align-items: center; gap: 10px; }
+    .podcast-title-block h2 { font-size: 18px; font-weight: 700; margin: 0; }
+    .badge-tag {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+      background: #fef3c7; color: #b45309; text-transform: uppercase;
+    }
+    .dropdown {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: var(--surface); font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer;
+    }
+    .podcast-row { display: flex; gap: 14px; overflow-x: auto; padding: 0 4px 6px; }
+    .podcast-card {
+      min-width: 300px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 14px; box-shadow: var(--shadow-sm);
+    }
+    .podcast-top { display: flex; gap: 12px; margin-bottom: 12px; }
+    .podcast-thumb {
+      width: 70px; height: 70px; border-radius: 10px; background: var(--bg);
+      display: grid; place-items: center; flex-shrink: 0; overflow: hidden;
+    }
+    .podcast-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .podcast-tag {
+      display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px;
+      border-radius: 4px; background: var(--primary-light); color: var(--primary); margin-bottom: 6px;
+    }
+    .podcast-episode { font-weight: 700; font-size: 13px; margin-bottom: 4px; line-height: 1.35; }
+    .podcast-chapter { font-size: 11px; color: var(--text-muted); }
+    .podcast-player {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .play-btn {
+      width: 28px; height: 28px; border-radius: 50%; background: var(--primary-light);
+      color: var(--primary); display: grid; place-items: center; border: none; cursor: pointer;
+    }
+    .player-time { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+    .player-bar {
+      flex: 1; height: 4px; background: var(--border); border-radius: 999px; overflow: hidden;
+    }
+    .player-progress { width: 0%; height: 100%; background: var(--primary); border-radius: 999px; }
+    .player-actions { display: flex; gap: 6px; color: var(--text-light); }
+    .player-actions button {
+      width: 24px; height: 24px; border: none; background: transparent; cursor: pointer;
+      display: grid; place-items: center; color: var(--text-light);
+    }
+
+    /* Tasks */
+    .task-search-row {
+      display: flex; align-items: center; gap: 10px; padding: 0 20px 14px;
+    }
+    .task-search {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; background: var(--surface);
+    }
+    .task-search input { border: none; outline: none; font-size: 13px; width: 100%; background: transparent; }
+    .task-search input::placeholder { color: var(--text-light); }
+    .task-tabs {
+      display: flex; gap: 6px; padding: 0 20px 12px; border-bottom: 1px solid var(--border);
+    }
+    .task-tab {
+      padding: 7px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; border: 1px solid transparent;
+    }
+    .task-tab:hover { background: #f8fafc; }
+    .task-tab.active { background: var(--primary); color: white; }
+    .task-filters {
+      display: flex; gap: 8px; padding: 14px 20px;
+    }
+    .filter-pill {
+      padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    }
+    .filter-pill.active { background: var(--primary-light); color: var(--primary); border-color: var(--primary-light); }
+    .task-list { display: flex; flex-direction: column; }
+    .task-item {
+      display: flex; align-items: center; gap: 14px; padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-thumb {
+      width: 44px; height: 44px; border-radius: 10px; background: #fef2f2;
+      display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+    }
+    .task-thumb.bio { background: #f0fdf4; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-topic { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
+    .task-type { font-size: 10px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .03em; }
+    .task-meta { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 12px; }
+    .task-level {
+      padding: 2px 8px; border-radius: 4px; background: #f1f5f9; font-size: 11px; font-weight: 700;
+    }
+    .task-status {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+    }
+    .task-status.pending { background: var(--orange-light); color: var(--orange); }
+    .task-status.submitted { background: var(--blue-light); color: var(--blue); }
+    .load-more {
+      padding: 14px; text-align: center; color: var(--primary); font-size: 13px; font-weight: 600;
+      cursor: pointer; border-top: 1px solid var(--border);
+    }
+    .load-more:hover { background: var(--primary-soft); }
+
+    /* Right panel widgets */
+    .widget-list { display: flex; flex-direction: column; }
+    .message-item { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+    .message-item:last-child { border-bottom: none; }
+    .message-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+    .message-title { font-weight: 700; font-size: 14px; color: var(--text); }
+    .message-meta { font-size: 11px; color: var(--text-muted); }
+    .message-dot { color: var(--text-light); margin: 0 5px; }
+    .message-body { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px; }
+    .message-actions { display: flex; gap: 16px; color: var(--text-light); font-size: 12px; }
+    .message-actions span { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    .message-dots { display: flex; justify-content: center; gap: 6px; padding: 10px; }
+    .message-dots button {
+      width: 7px; height: 7px; border-radius: 50%; border: none; background: var(--border-strong); cursor: pointer;
+    }
+    .message-dots button.active { background: var(--text-muted); }
+
+    /* Space Walk */
+    .spacewalk-body {
+      padding: 0 20px 20px; display: flex; align-items: center; gap: 16px;
+    }
+    .spacewalk-astronaut {
+      width: 120px; height: 120px; border-radius: 12px; background: var(--primary-soft);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .spacewalk-text { font-size: 14px; color: var(--primary); font-weight: 600; line-height: 1.5; }
+
+    /* All Courses */
+    .course-tabs { display: flex; gap: 6px; padding: 0 20px 14px; border-bottom: 1px solid var(--border); }
+    .course-tab {
+      padding: 6px 10px; font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+    }
+    .course-tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -14px; padding-bottom: 12px; }
+    .course-list { max-height: 320px; overflow-y: auto; }
+    .course-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--border);
+    }
+    .course-date {
+      width: 44px; text-align: center; font-size: 12px; font-weight: 700; color: var(--text); flex-shrink: 0;
+    }
+    .course-info { flex: 1; min-width: 0; }
+    .course-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .course-sub { font-size: 11px; color: var(--text-muted); }
+    .course-status {
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; flex-shrink: 0;
+    }
+    .course-status.missed { background: #f1f5f9; color: var(--text-muted); }
+    .course-status.full { background: #fee2e2; color: #b91c1c; }
+
+    /* Upcoming Classes */
+    .uc-calendar { padding: 0 20px 16px; }
+    .uc-week { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .uc-week-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+    .uc-days { display: flex; justify-content: space-between; }
+    .uc-day { text-align: center; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+    .uc-day.active { background: var(--primary); color: white; }
+    .uc-day-label { font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .uc-day-num { font-size: 15px; font-weight: 700; margin-top: 2px; }
+
+    /* FlipLearn page */
+    .fl-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; height: calc(100vh - var(--topbar-height) - 44px); }
+    .fl-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm);
+    }
+    .fl-panel-header {
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .fl-panel-title { font-weight: 700; font-size: 15px; }
+    .fl-panel-body { flex: 1; overflow: auto; padding: 16px; }
+    .fl-right { display: flex; flex-direction: column; height: 100%; }
+    .fl-tools { flex: 1; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+
+    /* PDF viewer */
+    .pdf-tip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-muted); background: var(--bg);
+      padding: 5px 10px; border-radius: 999px; margin-bottom: 10px;
+    }
+    .pdf-page-card {
+      background: white; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 28px; min-height: 420px; box-shadow: var(--shadow-sm);
+      font-size: 14px; line-height: 1.7; color: #374151;
+      position: relative; overflow: auto;
+    }
+    .pdf-page-card p { margin: 0 0 12px; transition: .1s; }
+    .pdf-page-card p:hover { background: var(--primary-soft); cursor: pointer; border-radius: 4px; }
+    #pdfCanvas { display: block; margin: 0 auto; max-width: 100%; }
+    .pdf-text-layer {
+      position: absolute; left: 0; top: 0;
+      line-height: 1;
+    }
+    .pdf-text-layer > span {
+      position: absolute; color: transparent; cursor: pointer;
+      transform-origin: 0% 0%; white-space: pre;
+    }
+    .pdf-text-layer > span:hover { background: var(--primary); color: transparent; opacity: 0.15; }
+    .pdf-text-layer > span.highlight-sentence { background: var(--primary); color: transparent; opacity: 0.25; }
+    .pdf-nav {
+      display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+    }
+    .pdf-counter { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .inline-explanation {
+      background: var(--primary-soft); border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 12px 14px; margin: 10px 0 16px; font-size: 13px;
+    }
+    .inline-explanation .label { color: var(--primary); font-weight: 700; font-size: 11px; margin-bottom: 6px; display: block; }
+    .inline-explanation .exp-text { color: var(--text); margin-bottom: 8px; }
+    .inline-explanation .mnemonic { color: var(--text-muted); font-size: 12px; margin-bottom: 8px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 16px; }
+    .tab {
+      padding: 10px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+    }
+    .tab.active { color: var(--primary); border-color: var(--primary); }
+
+    /* AI tools content */
+    .tool-content { display: none; padding: 14px; overflow: auto; flex: 1; }
+    .tool-content.active { display: block; }
+    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .summary-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; font-size: 12px; color: var(--text);
+    }
+    .summary-card b { color: var(--primary); }
+    .tool-para { font-size: 13px; line-height: 1.7; color: var(--text); }
+    .keyword-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 12px; margin-bottom: 10px;
+    }
+    .keyword-term { font-weight: 700; color: var(--primary); font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; gap:6px; }
+    .keyword-context { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .mindmap-wrap { display: flex; justify-content: center; align-items: center; height: 100%; overflow: auto; background: var(--primary-soft); border-radius: var(--radius); }
+    .mindmap-svg { min-width: 820px; min-height: 620px; }
+    .mindmap-link { stroke: #c4b5fd; stroke-width: 2; fill: none; }
+    .mindmap-node { cursor: default; transition: .2s; }
+    .mindmap-node:hover circle { stroke: var(--primary); stroke-width: 3; }
+    .mindmap-node text { font-size: 12px; font-weight: 600; fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: middle; }
+    .mindmap-root text { fill: white; font-size: 14px; font-weight: 700; }
+    .mindmap-main text { fill: var(--primary); }
+    .formula-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 10px;
+    }
+    .formula-line {
+      font-family: 'Courier New', monospace; font-size: 14px; color: var(--primary);
+      background: var(--primary-soft); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;
+    }
+    .formula-highlight { background: #fde68a; color: #92400e; border-radius: 3px; padding: 0 2px; }
+    .formula-context { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+    /* Mnemonics */
+    .mnemonic-card {
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; margin-bottom: 10px;
+    }
+    .mnemonic-concept { font-weight: 700; color: var(--primary); font-size: 13px; margin-bottom: 6px; }
+    .mnemonic-text { font-size: 13px; color: var(--text); line-height: 1.55; }
+
+    /* Flashcards */
+    .flashcard-stack { position: relative; height: 360px; perspective: 1000px; }
+    .flashcard-card {
+      position: absolute; width: 100%; height: 100%;
+      transform-style: preserve-3d; transition: transform 0.5s;
+    }
+    .flashcard-card.flipped { transform: rotateY(180deg); }
+    .flashcard-card.leaving { transform: translateX(120%) rotate(10deg); opacity: 0; }
+    .flashcard-face {
+      position: absolute; width: 100%; height: 100%;
+      backface-visibility: hidden;
+      border-radius: var(--radius); padding: 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column;
+    }
+    .flashcard-face.back {
+      transform: rotateY(180deg);
+      background: var(--primary-soft);
+    }
+    .flashcard-question { font-weight: 600; font-size: 14px; margin-bottom: 12px; flex-shrink: 0; }
+    .flashcard-input { margin-top: auto; }
+    .flashcard-input input {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; font-size: 13px; outline: none;
+    }
+    .flashcard-input input:focus { border-color: var(--primary); }
+    .flashcard-answer { font-size: 13px; color: var(--text); margin-bottom: 10px; }
+    .flashcard-keywords { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .flashcard-keyword {
+      font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px;
+      background: var(--primary-light); color: var(--primary);
+    }
+    .flashcard-keyword.missed { background: #fee2e2; color: #b91c1c; }
+    .fc-next { margin-top: auto; }
+    .flashcard-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+
+    /* Q-Bank */
+    .qbank-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .qbank-chapter {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
+      cursor: pointer; display: flex; align-items: flex-start; gap: 10px;
+      transition: .15s; background: var(--surface);
+    }
+    .qbank-chapter:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .qbank-chapter input { margin-top: 3px; }
+    .qbank-chapter-title { font-weight: 600; font-size: 13px; }
+    .qbank-chapter-count { font-size: 11px; color: var(--text-muted); }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+
+    @media (max-width: 1200px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .feature-row { grid-template-columns: 1fr; }
+      .fl-layout { grid-template-columns: 1fr; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <svg viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(6, 8)">
+            <ellipse cx="12" cy="18" rx="8" ry="8" fill="#1e40af"/>
+            <ellipse cx="24" cy="10" rx="6" ry="6" fill="#3b82f6"/>
+            <ellipse cx="28" cy="24" rx="7" ry="7" fill="#2563eb"/>
+            <ellipse cx="10" cy="8" rx="5" ry="5" fill="#60a5fa"/>
+            <ellipse cx="6" cy="28" rx="5" ry="5" fill="#1d4ed8"/>
+          </g>
+          <text x="48" y="30" font-family="Inter, sans-serif" font-size="17" font-weight="800" fill="#1e3a8a">EuroSchool</text>
+        </svg>
+      </div>
+      <nav class="nav">
+        <div class="nav-item active" data-page="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" data-page="fliplearn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>FlipLearn</span>
+          <span class="nav-badge">New</span>
+        </div>
+        <div class="nav-item" data-page="qbank">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          <span>Q-Bank</span>
+          <span class="nav-badge">New</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <span>Home Extension</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <span>Message Center</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>Class Notes</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+          <span>Curriculum</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+          <span>Courses</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          <span>Space Walk</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+          <span>Performance</span>
+          <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <span>Learner's Profile</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          <span>Calendar</span>
+          <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+          <span>Fees</span>
+        </div>
+        <div class="nav-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>Help & Support</span>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-greeting">
+            <h1>Hi, Samant M Patil</h1>
+            <span class="badge-present">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Present
+            </span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button class="topbar-btn secondary" onclick="goToFlipLearn()">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            FlipLearn
+            <span class="nav-badge" style="margin-left:4px;">New</span>
+          </button>
+          <button class="topbar-btn secondary" onclick="showPage('qbank')">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+            Q-Bank
+          </button>
+          <button class="topbar-btn secondary" onclick="alert('Aspire Lens is coming soon')">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M6.34 17.66l-1.41 1.41"></path><path d="M19.07 4.93l-1.41 1.41"></path></svg>
+            Aspire Lens
+          </button>
+          <button class="notif-btn" aria-label="Notifications">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            <span class="notif-badge">50</span>
+          </button>
+          <div class="euros-pill">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" opacity="0.15"/><text x="12" y="16" text-anchor="middle" font-size="12" font-weight="700">€</text></svg>
+            90 Euros
+          </div>
+          <div class="profile-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <main class="content">
+        <!-- Dashboard Page -->
+        <div class="page active" id="dashboard">
+          <div class="dashboard-grid">
+            <div class="dashboard-main">
+              <!-- Feature highlights -->
+              <div class="feature-row">
+                <div class="feature-card">
+                  <div class="feature-icon green">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                  </div>
+                  <div class="feature-body">
+                    <div class="feature-title">FlipLearn <span class="badge-new">New</span></div>
+                    <div class="feature-desc">Upload any PDF chapter, flip through pages, tap sentences for instant explanations & memory tips.</div>
+                    <button class="btn btn-primary btn-sm" onclick="goToFlipLearn()">Open</button>
+                  </div>
+                </div>
+                <div class="feature-card">
+                  <div class="feature-icon purple">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                  </div>
+                  <div class="feature-body">
+                    <div class="feature-title">Q-Bank <span class="badge-new">New</span></div>
+                    <div class="feature-desc">Pick chapters and revise with interactive flashcards from your course material.</div>
+                    <button class="btn btn-primary btn-sm" onclick="showPage('qbank')">Start</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Learning Journey -->
+              <div class="card">
+                <div class="lj-header">
+                  <div class="lj-title">
+                    <h2 style="font-size:18px;font-weight:700;margin:0;">Learning Journey</h2>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  </div>
+                  <div class="lj-controls">
+                    <button class="icon-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                    </button>
+                    <button class="icon-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                    <a class="card-link">View All</a>
+                  </div>
+                </div>
+                <div class="lj-row">
+                  <!-- Chemistry -->
+                  <div class="subject-card">
+                    <div class="subject-header">
+                      <div class="subject-thumb">⚗️</div>
+                      <div>
+                        <div class="subject-name">Chemistry</div>
+                        <div class="subject-teacher">By Avinash Maruti Kadrolkar</div>
+                      </div>
+                    </div>
+                    <div class="topic-list">
+                      <div class="topic-item">
+                        <div class="topic-dot pending"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Electrolysis</div>
+                          <div class="topic-status yet">Yet To Start</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot completed"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Mole concept and Stoichiometry</div>
+                          <div class="topic-status completed">Recently Completed</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot completed"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Periodic Table-Periodic Properties And Variations Of Properties</div>
+                          <div class="topic-status completed">Recently Completed</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                    </div>
+                    <div class="subject-actions">
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Resources
+                      </button>
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Tasks
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Biology -->
+                  <div class="subject-card">
+                    <div class="subject-header">
+                      <div class="subject-thumb bio">🧬</div>
+                      <div>
+                        <div class="subject-name">Biology</div>
+                        <div class="subject-teacher">By Rakhi Joshi</div>
+                      </div>
+                    </div>
+                    <div class="topic-list">
+                      <div class="topic-item">
+                        <div class="topic-dot progress"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Structure of Chromosomes, Cell Cycle and Cell Division</div>
+                          <div class="topic-status progress">In Progress</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot pending"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Cell:The Structural And Functional Unit Of Life</div>
+                          <div class="topic-status yet">Yet To Start</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot completed"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Chemical Co-ordination in Plants</div>
+                          <div class="topic-status completed">Recently Completed</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                    </div>
+                    <div class="subject-actions">
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Resources
+                      </button>
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Tasks
+                      </button>
+                    </div>
+                  </div>
+                  <!-- Geography -->
+                  <div class="subject-card">
+                    <div class="subject-header">
+                      <div class="subject-thumb geo">🌍</div>
+                      <div>
+                        <div class="subject-name">Geography</div>
+                        <div class="subject-teacher">By Chandrima Roy</div>
+                      </div>
+                    </div>
+                    <div class="topic-list">
+                      <div class="topic-item">
+                        <div class="topic-dot progress"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Natural vegetation</div>
+                          <div class="topic-status progress">In Progress</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot pending"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Topography</div>
+                          <div class="topic-status yet">Yet To Start</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                      <div class="topic-item">
+                        <div class="topic-dot completed"></div>
+                        <div class="topic-info">
+                          <div class="topic-title">Soil resources</div>
+                          <div class="topic-status completed">Recently Completed</div>
+                        </div>
+                        <svg class="topic-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                      </div>
+                    </div>
+                    <div class="subject-actions">
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                        Resources
+                      </button>
+                      <button>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Tasks
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Podcasts -->
+              <div class="card">
+                <div class="podcast-header">
+                  <div class="podcast-title-block">
+                    <h2>Podcasts</h2>
+                    <span class="badge-tag">New</span>
+                  </div>
+                  <div class="dropdown">
+                    All Subjects
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                </div>
+                <div class="podcast-row">
+                  <div class="podcast-card">
+                    <div class="podcast-top">
+                      <div class="podcast-thumb">🧪</div>
+                      <div>
+                        <span class="podcast-tag">Science</span>
+                        <div class="podcast-episode">4. Chemical reactions-displacement reactions, redox reaction</div>
+                        <div class="podcast-chapter">Chemical reactions and equations</div>
+                      </div>
+                    </div>
+                    <div class="podcast-player">
+                      <button class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+                      <span class="player-time">0:00 / 13:29</span>
+                      <div class="player-bar"><div class="player-progress"></div></div>
+                      <div class="player-actions">
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="podcast-card">
+                    <div class="podcast-top">
+                      <div class="podcast-thumb">⚛️</div>
+                      <div>
+                        <span class="podcast-tag">Science</span>
+                        <div class="podcast-episode">3. Chemical reactions-combination reactions</div>
+                        <div class="podcast-chapter">Chemical reactions and equations</div>
+                      </div>
+                    </div>
+                    <div class="podcast-player">
+                      <button class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+                      <span class="player-time">0:00 / 10:55</span>
+                      <div class="player-bar"><div class="player-progress"></div></div>
+                      <div class="player-actions">
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="podcast-card">
+                    <div class="podcast-top">
+                      <div class="podcast-thumb">🔥</div>
+                      <div>
+                        <span class="podcast-tag">Science</span>
+                        <div class="podcast-episode">2. Balancing chemical equations</div>
+                        <div class="podcast-chapter">Chemical reactions and equations</div>
+                      </div>
+                    </div>
+                    <div class="podcast-player">
+                      <button class="play-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+                      <span class="player-time">0:00 / 12:04</span>
+                      <div class="player-bar"><div class="player-progress"></div></div>
+                      <div class="player-actions">
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg></button>
+                        <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tasks -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Tasks</div>
+                </div>
+                <div class="task-search-row">
+                  <div class="task-search">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" placeholder="Search for tasks. You can enter the Chapter, topic, or task name." />
+                  </div>
+                  <div class="dropdown">
+                    All Subjects
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                </div>
+                <div class="task-tabs">
+                  <div class="task-tab active">All Tasks (70)</div>
+                  <div class="task-tab">Enrichment Worksheet (70)</div>
+                  <div class="task-tab">Quiz</div>
+                  <div class="task-tab">Projects</div>
+                </div>
+                <div class="task-filters">
+                  <div class="filter-pill active">All</div>
+                  <div class="filter-pill">Pending</div>
+                  <div class="filter-pill">Overdue</div>
+                  <div class="filter-pill">Submitted</div>
+                  <div class="filter-pill">Evaluated</div>
+                </div>
+                <div class="task-list">
+                  <div class="task-item">
+                    <div class="task-thumb">⚗️</div>
+                    <div class="task-info">
+                      <div class="task-topic">Mole concept and Stoichiometry</div>
+                      <div class="task-type">Worksheet</div>
+                    </div>
+                    <div class="task-meta">
+                      <span>Chemistry</span>
+                      <span>·</span>
+                      <span>Mole concept and Stoichiometry</span>
+                      <span class="task-level">L2</span>
+                    </div>
+                    <span class="task-status pending">Pending</span>
+                  </div>
+                  <div class="task-item">
+                    <div class="task-thumb">⚗️</div>
+                    <div class="task-info">
+                      <div class="task-topic">Mole concept and Stoichiometry</div>
+                      <div class="task-type">Worksheet</div>
+                    </div>
+                    <div class="task-meta">
+                      <span>Chemistry</span>
+                      <span>·</span>
+                      <span>Mole concept and Stoichiometry</span>
+                      <span class="task-level">L1</span>
+                    </div>
+                    <span class="task-status pending">Pending</span>
+                  </div>
+                  <div class="task-item">
+                    <div class="task-thumb bio">🧬</div>
+                    <div class="task-info">
+                      <div class="task-topic">Chemical Co-ordination in Plants</div>
+                      <div class="task-type">Worksheet</div>
+                    </div>
+                    <div class="task-meta">
+                      <span>Biology</span>
+                      <span>·</span>
+                      <span>Chemical Co-ordination in Plants</span>
+                      <span class="task-level">L1</span>
+                    </div>
+                    <span class="task-status pending">Pending</span>
+                  </div>
+                  <div class="task-item">
+                    <div class="task-thumb bio">🧬</div>
+                    <div class="task-info">
+                      <div class="task-topic">The Excretory System</div>
+                      <div class="task-type">Worksheet</div>
+                    </div>
+                    <div class="task-meta">
+                      <span>Biology</span>
+                      <span>·</span>
+                      <span>The Excretory System</span>
+                      <span class="task-level">L1</span>
+                    </div>
+                    <span class="task-status submitted">Submitted</span>
+                  </div>
+                </div>
+                <div class="load-more">Load More ...</div>
+              </div>
+            </div>
+
+            <!-- Right panel -->
+            <aside class="dashboard-side">
+              <!-- Message Center -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Message Center</div>
+                  <a class="card-link">View All</a>
+                </div>
+                <div class="widget-list">
+                  <div class="message-item">
+                    <div class="message-header">
+                      <div>
+                        <div class="message-title">Soil worksheet</div>
+                        <div class="message-meta">Chandrima Roy <span class="message-dot">•</span> 9 days ago</div>
+                      </div>
+                    </div>
+                    <div class="message-body">Dear students<br>Please take a print out of the worksheet and solve</div>
+                    <div class="message-actions">
+                      <span>😊 0</span>
+                      <span>👍 0</span>
+                      <span>💬 0</span>
+                      <span>📎 1</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="message-dots">
+                  <button class="active"></button>
+                  <button></button>
+                  <button></button>
+                </div>
+              </div>
+
+              <!-- Space Walk -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title-wrap">
+                    <div class="card-title">Space Walk</div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  </div>
+                </div>
+                <div class="spacewalk-body">
+                  <div class="spacewalk-astronaut">🧑‍🚀</div>
+                  <div class="spacewalk-text">Practice resources to begin your journey.</div>
+                </div>
+              </div>
+
+              <!-- All Courses -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">All Courses</div>
+                  <a class="card-link">View All</a>
+                </div>
+                <div class="course-tabs">
+                  <div class="course-tab active">All</div>
+                  <div class="course-tab">Upcoming</div>
+                  <div class="course-tab">Ongoing</div>
+                  <div class="course-tab">Completed</div>
+                </div>
+                <div class="course-list">
+                  <div class="course-item">
+                    <div class="course-date">13 Feb</div>
+                    <div class="course-info">
+                      <div class="course-name">Principal's Address for Grade 10: Preparing for Board Exam Success</div>
+                      <div class="course-sub">Board Exam</div>
+                    </div>
+                    <span class="course-status missed">Missed</span>
+                  </div>
+                  <div class="course-item">
+                    <div class="course-date">23 Dec</div>
+                    <div class="course-info">
+                      <div class="course-name">Mastering Commercial Studies: Grade 10 Board Exam Masterclass</div>
+                      <div class="course-sub">Commercial Studies</div>
+                    </div>
+                    <span class="course-status missed">Missed</span>
+                  </div>
+                  <div class="course-item">
+                    <div class="course-date">23 Dec</div>
+                    <div class="course-info">
+                      <div class="course-name">Mastering Physics: Grade 10 Board Exam Masterclass</div>
+                      <div class="course-sub">Physics</div>
+                    </div>
+                    <span class="course-status missed">Missed</span>
+                  </div>
+                  <div class="course-item">
+                    <div class="course-date">22 Dec</div>
+                    <div class="course-info">
+                      <div class="course-name">Mastering Marathi: Grade 10 Board Exam Masterclass</div>
+                      <div class="course-sub">Marathi</div>
+                    </div>
+                    <span class="course-status missed">Missed</span>
+                  </div>
+                  <div class="course-item">
+                    <div class="course-date">06 Jul</div>
+                    <div class="course-info">
+                      <div class="course-name">Healthy Plate, Healthy Child: Boosting Wellness Through Food</div>
+                      <div class="course-sub">Health Physical Education</div>
+                    </div>
+                    <span class="course-status full">Seat Full</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Upcoming Classes -->
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Upcoming Classes</div>
+                  <a class="card-link">View All</a>
+                </div>
+                <div class="uc-calendar">
+                  <div class="uc-week">
+                    <div class="uc-week-title">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      Thu, 25 Jun
+                    </div>
+                    <div style="display:flex;gap:8px;color:var(--text-light);">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                  </div>
+                  <div class="uc-days">
+                    <div class="uc-day"><div class="uc-day-label">Mon</div><div class="uc-day-num">22</div></div>
+                    <div class="uc-day"><div class="uc-day-label">Tue</div><div class="uc-day-num">23</div></div>
+                    <div class="uc-day"><div class="uc-day-label">Wed</div><div class="uc-day-num">24</div></div>
+                    <div class="uc-day active"><div class="uc-day-label">Thu</div><div class="uc-day-num">25</div></div>
+                    <div class="uc-day"><div class="uc-day-label">Fri</div><div class="uc-day-num">26</div></div>
+                    <div class="uc-day"><div class="uc-day-label">Sat</div><div class="uc-day-num">27</div></div>
+                    <div class="uc-day"><div class="uc-day-label">Sun</div><div class="uc-day-num">28</div></div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <!-- FlipLearn Page -->
+        <div class="page" id="fliplearn">
+          <div class="fl-layout">
+            <!-- Left: PDF viewer -->
+            <div class="fl-panel">
+              <div class="fl-panel-header">
+                <div class="fl-panel-title">Chapter Flipbook</div>
+                <input type="file" id="pdfUpload" accept=".pdf,application/pdf" hidden />
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pdfUpload').click()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  Upload PDF
+                </button>
+              </div>
+              <div class="fl-panel-body">
+                <div class="pdf-tip">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                  Tap any sentence for an explanation
+                </div>
+                <div id="pdfViewer" class="pdf-viewer" style="position:relative; min-height:420px;">
+                  <div id="pdfPageCard" class="pdf-page-card">
+                    <p data-idx="0"><strong>Chapter 3: Force and Pressure</strong></p>
+                    <p data-idx="1">A force is a push or pull acting upon an object as a result of its interaction with another object. Forces can make objects start moving, stop moving, speed up, slow down, or change direction.</p>
+                    <p data-idx="2">Force is measured in newtons (N). One newton is the force needed to accelerate a one-kilogram mass by one metre per second squared.</p>
+                    <p data-idx="3">Pressure is defined as the force acting per unit area. The same force applied over a smaller area produces a greater pressure, which is why sharp knives cut more easily than blunt ones.</p>
+                    <p data-idx="4">Liquids and gases exert pressure on the walls of their containers. Atmospheric pressure is the pressure exerted by the weight of the air above us.</p>
+                  </div>
+                  <canvas id="pdfCanvas" style="display:none;"></canvas>
+                  <div id="pdfTextLayer" class="pdf-text-layer" style="display:none;"></div>
+                </div>
+                <div id="explanationBox"></div>
+                <div class="pdf-nav">
+                  <button class="btn btn-secondary btn-sm" onclick="changePage(-1)">Previous</button>
+                  <span class="pdf-counter" id="pageCounter">Page 1 / 5</span>
+                  <button class="btn btn-secondary btn-sm" onclick="changePage(1)">Next</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: AI Study Tools -->
+            <div class="fl-panel fl-right">
+              <div class="fl-tools">
+                <div class="fl-panel-header">
+                  <div class="fl-panel-title">AI Study Tools</div>
+                </div>
+
+                <div class="tabs">
+                  <div class="tab active" data-tab="summary" onclick="switchTab('summary')">Summary</div>
+                  <div class="tab" data-tab="mindmap" onclick="switchTab('mindmap')">Mindmap</div>
+                  <div class="tab" data-tab="formulas" onclick="switchTab('formulas')">Formulas</div>
+                  <div class="tab" data-tab="mnemonics" onclick="switchTab('mnemonics')">Mnemonics</div>
+                  <div class="tab" data-tab="flashcards" onclick="switchTab('flashcards')">Flashcards</div>
+                </div>
+                <div class="tool-content active" id="summary"></div>
+                <div class="tool-content" id="mindmap"></div>
+                <div class="tool-content" id="formulas"></div>
+                <div class="tool-content" id="mnemonics"></div>
+                <div class="tool-content" id="flashcards"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q-Bank Page -->
+        <div class="page" id="qbank">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Q-Bank Revision</div>
+            </div>
+            <div style="padding: 0 20px 18px;">
+              <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Select chapters to review:</div>
+              <div class="qbank-chapters" id="qbankChapters"></div>
+              <button class="btn btn-primary" onclick="startQBankRevision()" style="margin-top:14px;">Start Revision</button>
+            </div>
+          </div>
+          <div id="qbankSession" style="margin-top:18px;display:none;">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title">Flashcard Session</div>
+                <button class="btn btn-secondary btn-sm" onclick="endQBankSession()">End</button>
+              </div>
+              <div style="padding:16px;">
+                <div class="flashcard-stack" id="qbankStack" style="height:360px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const HANDS_ON_ML_DATA = {
+      title: "Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow",
+      author: "Aurélien Géron",
+      edition: "2nd Edition",
+      summary: "A comprehensive, hands-on introduction to Machine Learning and Deep Learning. Part I covers the fundamentals: supervised, unsupervised, and reinforcement learning, plus end-to-end project workflow, classification, regression, SVMs, decision trees, ensembles, and dimensionality reduction. Part II dives into neural networks using TensorFlow and Keras: training deep nets, CNNs, RNNs, NLP with Transformers, generative models, reinforcement learning, and model deployment at scale.",
+      mindmap: {
+        root: "Hands-On ML",
+        branches: [
+          { name: "Fundamentals", children: ["Supervised Learning", "Unsupervised Learning", "Reinforcement Learning", "Batch vs Online", "Instance vs Model Based"] },
+          { name: "Data & Workflow", children: ["Frame the Problem", "EDA", "Test Set", "Feature Engineering", "Pipelines"] },
+          { name: "Classic Models", children: ["Linear Regression", "Logistic Regression", "SVM", "Decision Trees", "Random Forests"] },
+          { name: "Ensembles & Reduction", children: ["Voting", "Bagging", "Boosting", "PCA", "LLE", "Clustering"] },
+          { name: "Neural Networks", children: ["Keras", "MLPs", "Activation Functions", "Backpropagation", "Optimizers"] },
+          { name: "Deep Training", children: ["Initialization", "Batch Norm", "Dropout", "Gradient Clipping", "Transfer Learning"] },
+          { name: "Vision & Sequences", children: ["CNNs", "Pooling", "ResNet", "RNNs", "LSTM", "Transformers"] },
+          { name: "Advanced Topics", children: ["NLP", "GANs", "Autoencoders", "Reinforcement Learning", "TF Serving"] }
+        ]
+      },
+      formulas: [
+        { formula: "y = Xw + b", context: "Linear regression prediction" },
+        { formula: "MSE = (1/m) Σᵢ (y⁽ⁱ⁾ − ŷ⁽ⁱ⁾)²", context: "Mean Squared Error cost function" },
+        { formula: "∂MSE/∂wⱼ = (2/m) Σᵢ (ŷ⁽ⁱ⁾ − y⁽ⁱ⁾) x⽮⁽ⁱ⁾", context: "Gradient of MSE with respect to weight j" },
+        { formula: "θ = (XᵀX)⁻¹ Xᵀy", context: "Normal equation closed-form solution" },
+        { formula: "σ(z) = 1 / (1 + e⁻ᶻ)", context: "Sigmoid / logistic function" },
+        { formula: "ReLU(z) = max(0, z)", context: "Rectified Linear Unit activation" },
+        { formula: "Softmax(z)ᵢ = e^{zᵢ} / Σⱼ e^{zⱼ}", context: "Softmax for multi-class probabilities" },
+        { formula: "Cross-Entropy = −Σᵢ yᵢ log(ŷᵢ)", context: "Classification loss function" },
+        { formula: "H = −Σ pᵢ log₂(pᵢ)", context: "Shannon entropy used in decision trees" },
+        { formula: "Gini = 1 − Σ pᵢ²", context: "Gini impurity for decision tree splits" },
+        { formula: "w := w − η ∇J(w)", context: "Gradient descent weight update" },
+        { formula: "w := w − η ∇J(w; x⁽ⁱ⁾, y⁽ⁱ⁾)", context: "Stochastic gradient descent update" },
+        { formula: "Batch Norm: ẑ = (z − μ_B) / √(σ_B² + ε)", context: "Normalizing activations per mini-batch" },
+        { formula: "Dropout: r ~ Bernoulli(p); ỹ = r ⊙ y", context: "Randomly zeroing neurons during training" },
+        { formula: "Convolution: (I ∗ K)(i,j) = Σₘ Σₙ I(i+m, j+n) K(m,n)", context: "2D discrete convolution for CNNs" },
+        { formula: "LSTM cell state: cₜ = fₜ ⊙ cₜ₋₁ + iₜ ⊙ c̃ₜ", context: "Long Short-Term Memory update" },
+        { formula: "Attention(Q,K,V) = softmax(QKᵀ/√dₖ) V", context: "Scaled dot-product attention" },
+        { formula: "Q-Learning: Q(s,a) ← Q(s,a) + α [r + γ max_a' Q(s',a') − Q(s,a)]", context: "Temporal-difference Q-value update" }
+      ],
+      mnemonics: [
+        { concept: "Supervised vs Unsupervised", mnemonic: "Supervised = School with a teacher (labels). Unsupervised = Detective finding hidden patterns (no labels)." },
+        { concept: "Batch vs Online Learning", mnemonic: "Batch = Meal prep on Sunday (train once on full data). Online = Food truck (learn continuously from each order)." },
+        { concept: "Bias vs Variance", mnemonic: "High bias = too simple (underfit). High variance = too complex (overfit). Aim for the Goldilocks zone." },
+        { concept: "Precision vs Recall", mnemonic: "Precision = Of predicted positives, how many are right? Recall = Of actual positives, how many did we catch?" },
+        { concept: "Gradient Descent", mnemonic: "A blind hiker walking downhill: step size = learning rate, slope = gradient, valley = minimum loss." },
+        { concept: "ReLU", mnemonic: "ReLU is a gatekeeper: positive numbers pass through, negatives become zero." },
+        { concept: "Dropout", mnemonic: "Dropout = study group where random members skip each session so no one memorizes answers." },
+        { concept: "Batch Normalization", mnemonic: "Batch Norm = adjusting exam scores so each class has the same average and spread." },
+        { concept: "CNN", mnemonic: "CNN = a magnifying glass sliding over an image, looking for local features like edges and textures." },
+        { concept: "LSTM", mnemonic: "LSTM = a conveyor belt (cell state) with gates deciding what to forget, store, and output." },
+        { concept: "Transformer", mnemonic: "Transformer = everyone in the sentence looks at everyone else at once (self-attention), no need to read word-by-word." },
+        { concept: "Random Forest", mnemonic: "Random Forest = asking a crowd of decision trees and taking a vote; wisdom of the forest." }
+      ],
+      chapters: [
+        {
+          id: "ch1",
+          title: "1. The Machine Learning Landscape",
+          summary: "Defines Machine Learning, explains why it is useful, surveys application examples, and introduces the major system categories: supervised/unsupervised/semisupervised/Reinforcement Learning, batch/online learning, and instance-based versus model-based learning. It also covers the main challenges: insufficient data, nonrepresentative data, poor-quality data, irrelevant features, overfitting, and underfitting.",
+          flashcards: [
+            { question: "What is the classic engineering definition of Machine Learning?", answer: "A computer program is said to learn from experience E with respect to some task T and some performance measure P, if its performance on T, as measured by P, improves with experience E.", keywords: ["Tom Mitchell", "experience", "task", "performance measure"] },
+            { question: "Name three broad categories of Machine Learning systems.", answer: "Supervised learning (labeled data), unsupervised learning (unlabeled data), and reinforcement learning (agent learns via rewards/penalties).", keywords: ["supervised", "unsupervised", "reinforcement"] },
+            { question: "What is the difference between batch and online learning?", answer: "Batch learning trains on the full dataset at once and must be retrained from scratch when new data arrives. Online learning learns incrementally, one instance or mini-batch at a time.", keywords: ["batch", "online", "incremental"] },
+            { question: "What is the difference between instance-based and model-based learning?", answer: "Instance-based learning compares new data to known examples. Model-based learning detects patterns in training data to build a predictive model.", keywords: ["instance-based", "model-based", "compare", "predictive model"] },
+            { question: "List three main challenges of Machine Learning.", answer: "Insufficient quantity of training data, nonrepresentative training data, and poor-quality data (noise/outliers/errors).", keywords: ["insufficient data", "nonrepresentative", "poor quality"] }
+          ]
+        },
+        {
+          id: "ch2",
+          title: "2. End-to-End Machine Learning Project",
+          summary: "Walks through a complete ML project using the California Housing dataset: framing the problem, selecting a performance measure, checking assumptions, creating a workspace, downloading data, exploratory data analysis, creating a test set, visualizing geographical data, looking for correlations, experimenting with attribute combinations, preparing data with transformations and pipelines, selecting and training models, fine-tuning with grid search, evaluating on the test set, and launching/monitoring the system.",
+          flashcards: [
+            { question: "What is the first step when framing an ML problem?", answer: "Define the business objective, how the solution will be used, and what the current non-ML solution looks like (if any).", keywords: ["business objective", "frame", "baseline"] },
+            { question: "Why is creating a test set early important?", answer: "To avoid data snooping bias—if you look at the test set while exploring, your brain may overfit and you will overestimate model performance.", keywords: ["test set", "data snooping", "overfit"] },
+            { question: "What is stratified sampling and when is it useful?", answer: "Stratified sampling ensures subgroups are represented in the same proportion as in the overall dataset. It is useful when a feature is important but rare.", keywords: ["stratified", "sampling", "proportions"] },
+            { question: "What is feature scaling and why is it needed?", answer: "Feature scaling puts numerical features on a similar scale (e.g., min-max or standardization). Many algorithms (SVMs, neural networks, gradient descent) perform better or converge faster.", keywords: ["feature scaling", "standardization", "min-max"] },
+            { question: "What is the purpose of cross-validation?", answer: "Cross-validation splits the training data into multiple folds to get a more reliable estimate of model performance and to compare models without touching the test set.", keywords: ["cross-validation", "folds", "model selection"] }
+          ]
+        },
+        {
+          id: "ch3",
+          title: "3. Classification",
+          summary: "Covers classification using the MNIST dataset. Topics include training binary classifiers, performance measures (accuracy, confusion matrix, precision, recall, F1 score, precision/recall trade-off, ROC curve, AUC), multiclass classification (One-vs-All, One-vs-One), error analysis, multilabel classification, and multioutput classification.",
+          flashcards: [
+            { question: "What is the difference between precision and recall?", answer: "Precision is the ratio of true positives among all positive predictions. Recall is the ratio of true positives among all actual positives.", keywords: ["precision", "recall", "true positives"] },
+            { question: "How is the F1 score calculated?", answer: "F1 = 2 × (precision × recall) / (precision + recall). It is the harmonic mean of precision and recall.", keywords: ["F1", "harmonic mean", "precision", "recall"] },
+            { question: "What does the ROC curve plot?", answer: "True Positive Rate (recall) against False Positive Rate at various classification thresholds.", keywords: ["ROC", "TPR", "FPR", "threshold"] },
+            { question: "What is the One-vs-All strategy for multiclass classification?", answer: "Train one binary classifier per class, where the class is positive and all others are negative. Pick the classifier with the highest score.", keywords: ["One-vs-All", "OvA", "multiclass"] },
+            { question: "What is multilabel classification?", answer: "Each instance can be assigned multiple labels. For example, a photo may contain both a cat and a dog.", keywords: ["multilabel", "multiple labels", "instance"] }
+          ]
+        },
+        {
+          id: "ch4",
+          title: "4. Training Models",
+          summary: "Explains how linear regression, polynomial regression, logistic regression, and softmax regression work. Covers the normal equation, gradient descent variants (batch, stochastic, mini-batch), learning rate schedules, polynomial features, learning curves, regularization (Ridge, Lasso, Elastic Net), and early stopping.",
+          flashcards: [
+            { question: "What is the normal equation used for?", answer: "It computes the closed-form solution for linear regression weights: θ = (XᵀX)⁻¹ Xᵀy.", keywords: ["normal equation", "closed-form", "linear regression"] },
+            { question: "What is the main difference between batch and stochastic gradient descent?", answer: "Batch gradient descent uses the entire training set for each update. Stochastic gradient descent uses a single random instance.", keywords: ["batch", "stochastic", "full data", "single instance"] },
+            { question: "What is the effect of adding polynomial features to linear regression?", answer: "It allows the model to fit nonlinear relationships by creating new features that are powers and interactions of original features.", keywords: ["polynomial", "nonlinear", "feature engineering"] },
+            { question: "How does Ridge regularization differ from Lasso?", answer: "Ridge (L2) adds the squared magnitude of weights to the cost, shrinking them. Lasso (L1) adds absolute values and can drive some weights to exactly zero, performing feature selection.", keywords: ["Ridge", "Lasso", "L2", "L1", "regularization"] },
+            { question: "What is early stopping?", answer: "Stop training as soon as validation error reaches a minimum to prevent overfitting.", keywords: ["early stopping", "validation", "overfitting"] }
+          ]
+        },
+        {
+          id: "ch5",
+          title: "5. Support Vector Machines",
+          summary: "Introduces SVMs for linear and nonlinear classification and regression. Covers hard-margin and soft-margin classification, the kernel trick (polynomial and RBF kernels), SVM classes in Scikit-Learn, SVM regression, and online SVMs.",
+          flashcards: [
+            { question: "What is the goal of a Support Vector Machine classifier?", answer: "Find the hyperplane that maximizes the margin between the two classes while tolerating some violations in soft-margin SVMs.", keywords: ["SVM", "margin", "hyperplane"] },
+            { question: "What is the kernel trick?", answer: "It maps features into a higher-dimensional space implicitly using a kernel function, allowing nonlinear decision boundaries without computing the mapping directly.", keywords: ["kernel trick", "nonlinear", "higher dimension"] },
+            { question: "What is the role of the C hyperparameter in a soft-margin SVM?", answer: "C controls the trade-off between a wide margin and allowing margin violations. Smaller C = wider margin, more violations. Larger C = fewer violations, narrower margin.", keywords: ["C", "soft margin", "trade-off"] },
+            { question: "Name two common SVM kernels.", answer: "Polynomial kernel and Radial Basis Function (RBF) / Gaussian kernel.", keywords: ["polynomial", "RBF", "Gaussian", "kernel"] },
+            { question: "Can SVMs be used for regression?", answer: "Yes. SVM Regression tries to fit as many instances as possible on a street (margin) while limiting margin violations.", keywords: ["SVR", "regression", "margin"] }
+          ]
+        },
+        {
+          id: "ch6",
+          title: "6. Decision Trees",
+          summary: "Explains decision trees: training, visualizing, making predictions, estimating class probabilities, the CART training algorithm, Gini impurity vs entropy, regularization hyperparameters, regression trees, and instability.",
+          flashcards: [
+            { question: "What algorithm does Scikit-Learn use to train decision trees?", answer: "CART (Classification and Regression Tree) algorithm, which produces binary trees using Gini impurity or entropy.", keywords: ["CART", "binary tree", "Gini", "entropy"] },
+            { question: "What is Gini impurity?", answer: "Gini = 1 − Σ pᵢ². It measures the probability that a randomly chosen instance would be incorrectly classified if labeled randomly according to class distribution.", keywords: ["Gini", "impurity", "classification"] },
+            { question: "How does a decision tree make predictions?", answer: "It routes an instance down the tree by answering feature-threshold questions at each node until a leaf provides the prediction.", keywords: ["decision tree", "node", "leaf", "threshold"] },
+            { question: "What are regularization hyperparameters for decision trees?", answer: "max_depth, min_samples_split, min_samples_leaf, max_leaf_nodes, etc. They restrict tree growth to reduce overfitting.", keywords: ["max_depth", "min_samples", "regularization", "overfitting"] },
+            { question: "Why are decision trees unstable?", answer: "Small changes in training data can lead to very different trees because splits are chosen greedily and boundaries are axis-aligned.", keywords: ["unstable", "greedy", "axis-aligned"] }
+          ]
+        },
+        {
+          id: "ch7",
+          title: "7. Ensemble Learning and Random Forests",
+          summary: "Covers ensemble methods: voting classifiers, bagging and pasting, random forests, boosting (AdaBoost, Gradient Boosting), stacking, and out-of-bag evaluation. Emphasizes that ensembles of diverse, well-tuned models often outperform individual models.",
+          flashcards: [
+            { question: "What is a voting classifier?", answer: "An ensemble that aggregates predictions from multiple classifiers and predicts the class with the most votes (hard voting) or highest average probability (soft voting).", keywords: ["voting classifier", "hard voting", "soft voting"] },
+            { question: "What is the difference between bagging and pasting?", answer: "Bagging samples training instances with replacement. Pasting samples without replacement.", keywords: ["bagging", "pasting", "bootstrap", "sampling"] },
+            { question: "How does a Random Forest differ from bagging decision trees?", answer: "Random Forest uses bagging but also randomly selects a subset of features at each split, increasing tree diversity.", keywords: ["random forest", "feature subset", "diversity"] },
+            { question: "What is boosting?", answer: "Boosting trains predictors sequentially, with each new predictor focusing on the mistakes of its predecessor.", keywords: ["boosting", "sequential", "mistakes"] },
+            { question: "What is stacking?", answer: "Stacking trains a meta-learner (blender) to combine the predictions of several base models, instead of using simple voting.", keywords: ["stacking", "meta-learner", "blender", "base models"] }
+          ]
+        },
+        {
+          id: "ch8",
+          title: "8. Dimensionality Reduction",
+          summary: "Discusses the curse of dimensionality and techniques to reduce dimensionality: PCA and its variants (randomized, incremental, kernel), LLE, and other methods like t-SNE and autoencoders. Covers choosing the right number of dimensions and using PCA for compression.",
+          flashcards: [
+            { question: "What is the curse of dimensionality?", answer: "As the number of features grows, data becomes sparse and distance-based algorithms suffer because training instances are far apart.", keywords: ["curse of dimensionality", "sparse", "distance"] },
+            { question: "How does PCA work?", answer: "PCA identifies the axes (principal components) that capture the most variance in the data and projects the data onto a lower-dimensional subspace.", keywords: ["PCA", "principal components", "variance", "projection"] },
+            { question: "What is the difference between randomized PCA and incremental PCA?", answer: "Randomized PCA is faster for large datasets by approximating components. Incremental PCA processes data in mini-batches, allowing online learning.", keywords: ["randomized PCA", "incremental PCA", "mini-batches"] },
+            { question: "What is Kernel PCA used for?", answer: "Kernel PCA performs nonlinear dimensionality reduction by mapping data to a higher-dimensional space and then applying PCA.", keywords: ["Kernel PCA", "nonlinear", "kernel"] },
+            { question: "What is LLE?", answer: "Locally Linear Embedding is a manifold learning technique that preserves local linear relationships between neighbors when reducing dimensions.", keywords: ["LLE", "manifold learning", "local relationships"] }
+          ]
+        },
+        {
+          id: "ch9",
+          title: "9. Unsupervised Learning Techniques",
+          summary: "Explores clustering (K-Means, DBSCAN, HCA), Gaussian mixtures, anomaly detection, and density estimation. Includes selecting the number of clusters, limits of K-Means, using clustering for image segmentation, and semi-supervised learning with clustering.",
+          flashcards: [
+            { question: "How does K-Means clustering work?", answer: "K-Means partitions data into k clusters by iteratively assigning each instance to the nearest centroid and updating centroids to the mean of assigned instances.", keywords: ["K-Means", "centroid", "cluster", "iterative"] },
+            { question: "What is the elbow method?", answer: "A heuristic to choose k by plotting inertia (within-cluster sum of squares) versus k and looking for an elbow where improvement slows.", keywords: ["elbow method", "inertia", "k"] },
+            { question: "What are the main limits of K-Means?", answer: "It assumes spherical clusters of similar size, can converge to local minima, and requires specifying k.", keywords: ["K-Means limits", "spherical", "local minima", "k"] },
+            { question: "What is DBSCAN good at?", answer: "DBSCAN can find arbitrarily shaped clusters and identifies outliers as noise, without requiring the number of clusters.", keywords: ["DBSCAN", "arbitrary shapes", "outliers", "noise"] },
+            { question: "What is a Gaussian Mixture Model?", answer: "A probabilistic model that assumes data is generated from a mixture of Gaussian distributions. It can be used for clustering and density estimation.", keywords: ["GMM", "Gaussian mixture", "probabilistic", "density"] }
+          ]
+        },
+        {
+          id: "ch10",
+          title: "10. Introduction to Artificial Neural Networks with Keras",
+          summary: "Introduces biological and artificial neurons, activation functions, the perceptron, MLPs, backpropagation, and training neural networks with Keras. Covers the Sequential and Functional APIs, compiling, training, evaluating, using callbacks, TensorBoard, and fine-tuning hyperparameters.",
+          flashcards: [
+            { question: "What is the role of an activation function in a neuron?", answer: "It introduces nonlinearity, allowing the network to learn complex patterns. Without it, a multi-layer network would be equivalent to a linear model.", keywords: ["activation function", "nonlinearity", "neuron"] },
+            { question: "What is backpropagation?", answer: "Backpropagation computes gradients of the loss with respect to each weight using the chain rule, starting from the output layer and moving backward.", keywords: ["backpropagation", "gradient", "chain rule", "weights"] },
+            { question: "What is the difference between the Keras Sequential and Functional APIs?", answer: "Sequential is a linear stack of layers. Functional is more flexible and supports shared layers, multiple inputs/outputs, and non-linear topologies.", keywords: ["Sequential", "Functional", "Keras", "API"] },
+            { question: "What are callbacks in Keras?", answer: "Callbacks are functions called during training to perform actions like saving checkpoints, early stopping, or logging to TensorBoard.", keywords: ["callbacks", "checkpoint", "early stopping", "TensorBoard"] },
+            { question: "What is TensorBoard used for?", answer: "TensorBoard visualizes training metrics, model graphs, embeddings, and histograms during and after training.", keywords: ["TensorBoard", "visualization", "metrics", "graphs"] }
+          ]
+        },
+        {
+          id: "ch11",
+          title: "11. Training Deep Neural Networks",
+          summary: "Discusses problems in deep network training: vanishing/exploding gradients, poor initialization (Glorot/He), saturating activation functions, batch normalization, gradient clipping, reusing pretrained layers, transfer learning, faster optimizers (Momentum, AdaGrad, RMSProp, Adam), learning rate scheduling, regularization (l1/l2, dropout, max-norm), and practical recommendations.",
+          flashcards: [
+            { question: "What causes the vanishing gradients problem?", answer: "Gradients become very small in early layers as they are multiplied by many small derivatives during backpropagation, slowing or stopping learning.", keywords: ["vanishing gradients", "early layers", "derivatives"] },
+            { question: "What is He initialization designed for?", answer: "He initialization sets initial weights with variance scaled by 2/fan_in, designed for ReLU activations to avoid vanishing/exploding gradients.", keywords: ["He initialization", "ReLU", "variance", "fan_in"] },
+            { question: "What does Batch Normalization do?", answer: "It normalizes and scales activations for each mini-batch, reducing internal covariate shift and often allowing higher learning rates.", keywords: ["Batch Normalization", "mini-batch", "internal covariate shift"] },
+            { question: "What is transfer learning?", answer: "Reusing weights from a pretrained model (usually trained on a large dataset) and fine-tuning on a new, often smaller, task.", keywords: ["transfer learning", "pretrained", "fine-tuning"] },
+            { question: "What is the Adam optimizer?", answer: "Adam combines momentum (exponential moving average of gradients) and RMSProp (exponential moving average of squared gradients) with bias correction.", keywords: ["Adam", "momentum", "RMSProp", "adaptive"] }
+          ]
+        },
+        {
+          id: "ch12",
+          title: "12. Custom Models and Training with TensorFlow",
+          summary: "Dives into TensorFlow internals: tensors, variables, operations, autodiff, custom loss functions, metrics, layers, models, and training loops. Covers saving/loading models with custom components, TF functions, AutoGraph, and tracing.",
+          flashcards: [
+            { question: "What is a TensorFlow tensor?", answer: "A multi-dimensional array that can hold numerical data and flow through a computational graph. Tensors are immutable.", keywords: ["tensor", "multi-dimensional", "immutable"] },
+            { question: "What is tf.Variable used for?", answer: "tf.Variable represents mutable state, typically used for model weights that are updated during training.", keywords: ["tf.Variable", "mutable", "weights"] },
+            { question: "How does TensorFlow's autodiff (GradientTape) work?", answer: "GradientTape records operations on variables during the forward pass so gradients can be computed automatically in the backward pass.", keywords: ["GradientTape", "autodiff", "gradients"] },
+            { question: "What is a tf.function?", answer: "A decorator that converts a Python function into a TensorFlow graph for faster execution. AutoGraph converts Python control flow into graph operations.", keywords: ["tf.function", "graph", "AutoGraph", "performance"] },
+            { question: "Why create custom Keras layers or models?", answer: "For research or special architectures not covered by built-in layers, such as custom attention mechanisms or loss terms.", keywords: ["custom layer", "custom model", "architecture"] }
+          ]
+        },
+        {
+          id: "ch13",
+          title: "13. Loading and Preprocessing Data with TensorFlow",
+          summary: "Covers the TensorFlow Data API (tf.data): creating datasets, transformations, shuffling, batching, prefetching, interleaving, TFRecords, protobuf, parsing examples, handling images, text preprocessing, and feature columns for structured data.",
+          flashcards: [
+            { question: "What is the purpose of the tf.data API?", answer: "It builds efficient input pipelines for loading, transforming, batching, and prefetching data, removing I/O bottlenecks during training.", keywords: ["tf.data", "pipeline", "prefetch", "batch"] },
+            { question: "What does prefetching do?", answer: "Prefetching overlaps data preprocessing and model execution so the GPU/CPU is not idle while waiting for the next batch.", keywords: ["prefetch", "overlap", "GPU", "CPU"] },
+            { question: "What is a TFRecord file?", answer: "A binary file format optimized for TensorFlow that stores serialized tf.train.Example protobuf records.", keywords: ["TFRecord", "protobuf", "binary", "Example"] },
+            { question: "Why use interleave in tf.data?", answer: "Interleave reads multiple files in parallel and interleaves their records, improving throughput for many small files.", keywords: ["interleave", "parallel", "throughput"] },
+            { question: "What are feature columns used for?", answer: "Feature columns map raw structured data (numeric, categorical, crossed features) into a format suitable for a neural network.", keywords: ["feature columns", "categorical", "structured data"] }
+          ]
+        },
+        {
+          id: "ch14",
+          title: "14. Deep Computer Vision with Convolutional Neural Networks",
+          summary: "Explains convolutional layers, filters, feature maps, pooling, CNN architectures (LeNet-5, AlexNet, GoogLeNet, VGGNet, ResNet, Xception, SENet), object detection, semantic segmentation, and implementing CNNs in TensorFlow.",
+          flashcards: [
+            { question: "What is a convolutional layer?", answer: "A layer that applies learnable filters across the input to detect local features such as edges, textures, and shapes.", keywords: ["convolutional layer", "filter", "local features"] },
+            { question: "What is the purpose of pooling layers?", answer: "Pooling reduces spatial dimensions, making the network more computationally efficient and translation-invariant.", keywords: ["pooling", "downsampling", "translation invariance"] },
+            { question: "What problem does ResNet solve?", answer: "ResNet uses skip connections to mitigate the vanishing gradients problem and allows training of very deep networks.", keywords: ["ResNet", "skip connections", "vanishing gradients", "deep"] },
+            { question: "What is a 1×1 convolution used for?", answer: "It reduces or increases the number of feature maps (bottleneck layer) and adds nonlinearity cheaply.", keywords: ["1x1 convolution", "bottleneck", "feature maps"] },
+            { question: "What is the difference between object detection and semantic segmentation?", answer: "Object detection locates and classifies objects with bounding boxes. Semantic segmentation classifies every pixel into a class.", keywords: ["object detection", "semantic segmentation", "bounding box", "pixel"] }
+          ]
+        },
+        {
+          id: "ch15",
+          title: "15. Processing Sequences Using RNNs and CNNs",
+          summary: "Introduces recurrent neural networks (RNNs), LSTM, GRU, bidirectional RNNs, and using 1D convolutions for sequences. Covers sequence-to-sequence models, beam search, and the basics of attention.",
+          flashcards: [
+            { question: "What is a recurrent neural network (RNN)?", answer: "A network with loops that maintains a hidden state, allowing it to process sequences of variable length.", keywords: ["RNN", "hidden state", "sequence", "loops"] },
+            { question: "What problem do LSTM networks solve?", answer: "LSTMs use gating mechanisms to better capture long-term dependencies and mitigate vanishing gradients in standard RNNs.", keywords: ["LSTM", "long-term dependencies", "gates"] },
+            { question: "What is a bidirectional RNN?", answer: "It processes the sequence both forward and backward, combining context from past and future tokens.", keywords: ["bidirectional RNN", "forward", "backward", "context"] },
+            { question: "What is beam search?", answer: "Beam search keeps the top-k most likely partial sequences at each step instead of greedy decoding, improving sequence generation quality.", keywords: ["beam search", "top-k", "decoding", "generation"] },
+            { question: "Can CNNs be used for sequence data?", answer: "Yes. 1D convolutions can detect local patterns in sequences and are often faster to train than RNNs.", keywords: ["1D CNN", "sequence", "local patterns"] }
+          ]
+        },
+        {
+          id: "ch16",
+          title: "16. Natural Language Processing with RNNs and Attention",
+          summary: "Covers text preprocessing, word embeddings (Word2Vec, GloVe), RNNs for sentiment analysis, encoder-decoder architectures, attention mechanisms, the Transformer architecture, and recent language models.",
+          flashcards: [
+            { question: "What is a word embedding?", answer: "A dense vector representation of a word that captures semantic meaning, where similar words are close in vector space.", keywords: ["word embedding", "dense vector", "semantics"] },
+            { question: "What is the Transformer architecture based on?", answer: "Self-attention mechanisms that relate each token to every other token in parallel, without recurrence or convolution.", keywords: ["Transformer", "self-attention", "parallel"] },
+            { question: "What is the attention mechanism in sequence models?", answer: "It allows the decoder to focus on relevant parts of the input sequence when generating each output token.", keywords: ["attention", "decoder", "focus", "alignment"] },
+            { question: "What is masking in NLP models?", answer: "Masking prevents the model from attending to padding tokens or future tokens during training.", keywords: ["masking", "padding", "future tokens"] },
+            { question: "What is an encoder-decoder architecture used for?", answer: "Sequence-to-sequence tasks such as machine translation, where the encoder compresses the input and the decoder generates the output.", keywords: ["encoder-decoder", "seq2seq", "translation"] }
+          ]
+        },
+        {
+          id: "ch17",
+          title: "17. Representation Learning and Generative Learning Using Autoencoders and GANs",
+          summary: "Discusses autoencoders (undercomplete, denoising, sparse, variational), GANs, style transfer, and deep convolutional GANs. Covers training tricks and applications of generative models.",
+          flashcards: [
+            { question: "What is an autoencoder?", answer: "A neural network trained to copy its input to its output through a compressed latent representation, learning efficient encodings.", keywords: ["autoencoder", "encoder", "decoder", "latent"] },
+            { question: "What is a Variational Autoencoder (VAE)?", answer: "A generative autoencoder that learns a probability distribution over latent variables, allowing generation of new samples.", keywords: ["VAE", "variational", "generative", "latent distribution"] },
+            { question: "What are the two main components of a GAN?", answer: "A generator that creates fake samples and a discriminator that tries to distinguish real from fake samples.", keywords: ["GAN", "generator", "discriminator", "adversarial"] },
+            { question: "What is mode collapse in GANs?", answer: "When the generator produces limited varieties of outputs, collapsing to a few modes of the real data distribution.", keywords: ["mode collapse", "generator", "limited variety"] },
+            { question: "How can autoencoders be used for denoising?", answer: "Denoising autoencoders are trained to reconstruct clean inputs from corrupted versions, learning robust features.", keywords: ["denoising autoencoder", "corrupted", "reconstruct"] }
+          ]
+        },
+        {
+          id: "ch18",
+          title: "18. Reinforcement Learning",
+          summary: "Introduces RL concepts: agent, environment, state, action, reward, policy, value function, Markov Decision Processes, Q-Learning, approximate Q-Learning, Deep Q-Networks, policy gradients, and TF-Agents.",
+          flashcards: [
+            { question: "What is reinforcement learning?", answer: "An agent learns to make decisions by performing actions in an environment to maximize cumulative reward over time.", keywords: ["reinforcement learning", "agent", "environment", "reward"] },
+            { question: "What is the credit assignment problem?", answer: "Determining which actions in a sequence led to a particular reward, especially when rewards are delayed.", keywords: ["credit assignment", "delayed reward", "actions"] },
+            { question: "What is Q-Learning?", answer: "A model-free RL algorithm that learns the value Q(s,a) of taking action a in state s, using the Bellman equation.", keywords: ["Q-Learning", "Q-value", "Bellman", "model-free"] },
+            { question: "What is a Markov Decision Process (MDP)?", answer: "A mathematical framework modeling decision making where outcomes are partly random and partly under the agent's control.", keywords: ["MDP", "Markov", "decision process", "random"] },
+            { question: "What is Deep Q-Learning (DQN)?", answer: "DQN uses a neural network to approximate Q-values, enabling RL on high-dimensional state spaces like Atari games.", keywords: ["DQN", "Deep Q-Network", "neural network", "Atari"] }
+          ]
+        },
+        {
+          id: "ch19",
+          title: "19. Training and Deploying TensorFlow Models at Scale",
+          summary: "Covers distributing TensorFlow across devices and servers, data parallelism, model parallelism, the Distribution Strategies API, training on TF clusters, deploying with TF Serving, running on mobile/edge with TFLite, and using Google Cloud AI Platform.",
+          flashcards: [
+            { question: "What is data parallelism?", answer: "Each device holds a copy of the model and processes a different subset of data; gradients are averaged across devices.", keywords: ["data parallelism", "model replica", "gradients", "average"] },
+            { question: "What is model parallelism?", answer: "Different parts of the model are placed on different devices, useful when the model is too large for one device.", keywords: ["model parallelism", "layers", "devices", "large model"] },
+            { question: "What is TF Serving?", answer: "A flexible, high-performance serving system for deploying TensorFlow models in production.", keywords: ["TF Serving", "deployment", "production"] },
+            { question: "What is TensorFlow Lite (TFLite)?", answer: "A framework for converting and deploying TensorFlow models on mobile, embedded, and edge devices.", keywords: ["TFLite", "mobile", "edge", "deployment"] },
+            { question: "What does the Distribution Strategies API do?", answer: "It abstracts distributed training so the same code can run on one GPU, multiple GPUs, or a cluster with minimal changes.", keywords: ["Distribution Strategies", "distributed", "GPU", "cluster"] }
+          ]
+        }
+      ]
+    };
+
+    // Navigation
+    const pages = { dashboard: 'Dashboard', fliplearn: 'FlipLearn', qbank: 'Q-Bank' };
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', () => showPage(item.dataset.page));
+    });
+
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(page)?.classList.add('active');
+      document.querySelectorAll('.nav-item[data-page]').forEach(n => n.classList.remove('active'));
+      document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+    }
+
+    function goToFlipLearn() { showPage('fliplearn'); }
+
+    // Static study tools
+    function switchTab(tab) {
+      document.querySelectorAll('.fl-tools .tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.fl-tools .tab[data-tab="${tab}"]`)?.classList.add('active');
+      document.querySelectorAll('.fl-tools .tool-content').forEach(c => c.classList.remove('active'));
+      document.getElementById(tab)?.classList.add('active');
+      renderStaticTab(tab);
+    }
+
+    function renderStaticTab(tab) {
+      const container = document.getElementById(tab);
+      if (!container) return;
+      if (tab === 'summary') {
+        container.innerHTML = renderSummary(HANDS_ON_ML_DATA.summary);
+      } else if (tab === 'mindmap') {
+        const related = {};
+        HANDS_ON_ML_DATA.mindmap.branches.forEach(b => related[b.name] = b.children);
+        container.innerHTML = renderMindmapSVG(HANDS_ON_ML_DATA.mindmap.root, HANDS_ON_ML_DATA.mindmap.branches.map(b => b.name), related);
+      } else if (tab === 'formulas') {
+        container.innerHTML = renderFormulas({ formulas: HANDS_ON_ML_DATA.formulas });
+      } else if (tab === 'mnemonics') {
+        container.innerHTML = renderMnemonics({ mnemonics: HANDS_ON_ML_DATA.mnemonics });
+      } else if (tab === 'flashcards') {
+        const allCards = HANDS_ON_ML_DATA.chapters.flatMap(c => c.flashcards || []);
+        startFlashcardSession('flashcards', allCards);
+      }
+    }
+
+    function renderSummary(text) {
+      return `<div class="tool-para"><strong>${escapeHtml(HANDS_ON_ML_DATA.title)}</strong><br><br>${escapeHtml(text)}</div>`;
+    }
+
+    function renderFormulas(data) {
+      const formulas = Array.isArray(data?.formulas) ? data.formulas : [];
+      if (!formulas.length) return `<div class="tool-empty">No formulas available.</div>`;
+      return formulas.map(f => `<div class="formula-card">
+        <div class="formula-line">${escapeHtml(f.formula || '')}</div>
+        <div class="formula-context">${escapeHtml(f.context || '')}</div>
+      </div>`).join('');
+    }
+
+    function renderMnemonics(data) {
+      const mnemonics = Array.isArray(data?.mnemonics) ? data.mnemonics : [];
+      if (!mnemonics.length) return `<div class="tool-empty">No mnemonics available.</div>`;
+      return mnemonics.map(m => `<div class="mnemonic-card">
+        <div class="mnemonic-concept">${escapeHtml(m.concept || '')}</div>
+        <div class="mnemonic-text">${escapeHtml(m.mnemonic || '')}</div>
+      </div>`).join('');
+    }
+
+    function renderMindmapSVG(root, branches, related) {
+      const w = 820, h = 620, cx = w/2, cy = h/2;
+      const radius = 180;
+      const angleStep = (2 * Math.PI) / Math.max(branches.length, 1);
+      let svg = `<svg class="mindmap-svg" viewBox="0 0 ${w} ${h}">`;
+      svg += `<defs><radialGradient id="mmBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5f3ff"/><stop offset="100%" stop-color="#ede9fe"/></radialGradient></defs>`;
+      svg += `<rect width="${w}" height="${h}" fill="url(#mmBg)"/>`;
+      const mainNodes = branches.map((term, i) => {
+        const angle = i * angleStep - Math.PI/2;
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        return { term, x, y, angle };
+      });
+      mainNodes.forEach(n => {
+        svg += `<line class="mindmap-link" x1="${cx}" y1="${cy}" x2="${n.x}" y2="${n.y}"/>`;
+      });
+      mainNodes.forEach(n => {
+        const subs = related[n.term] || [];
+        const subRadius = 90;
+        const subStep = Math.PI / (Math.max(subs.length + 1, 2));
+        subs.forEach((sub, j) => {
+          const subAngle = n.angle + (j+1) * subStep - (subs.length+1)*subStep/2;
+          const sx = n.x + Math.cos(subAngle) * subRadius;
+          const sy = n.y + Math.sin(subAngle) * subRadius;
+          svg += `<line class="mindmap-link" x1="${n.x}" y1="${n.y}" x2="${sx}" y2="${sy}"/>`;
+          svg += `<g class="mindmap-node">
+            <circle cx="${sx}" cy="${sy}" r="36" fill="white" stroke="#c4b5fd" stroke-width="2"/>
+            <text x="${sx}" y="${sy}">${wrapText(escapeHtml(sub), 10)}</text>
+          </g>`;
+        });
+      });
+      mainNodes.forEach(n => {
+        svg += `<g class="mindmap-node">
+          <circle cx="${n.x}" cy="${n.y}" r="52" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+          <text x="${n.x}" y="${n.y}" style="fill:#7c3aed;">${wrapText(escapeHtml(n.term), 14)}</text>
+        </g>`;
+      });
+      svg += `<g class="mindmap-node mindmap-root">
+        <circle cx="${cx}" cy="${cy}" r="64" fill="#7c3aed"/>
+        <text x="${cx}" y="${cy}">${wrapText(escapeHtml(root), 16)}</text>
+      </g>`;
+      svg += `</svg>`;
+      return `<div class="mindmap-wrap">${svg}</div>`;
+    }
+
+    function wrapText(text, maxChars) {
+      if (text.length <= maxChars) return text;
+      const words = text.split(' ');
+      const lines = [];
+      let cur = '';
+      words.forEach(w => {
+        if ((cur + ' ' + w).trim().length > maxChars && cur) { lines.push(cur); cur = w; }
+        else cur = (cur ? cur + ' ' : '') + w;
+      });
+      if (cur) lines.push(cur);
+      return lines.map((l,i) => `<tspan dy="${i===0?'0':'1.2em'}">${l}</tspan>`).join('');
+    }
+
+    // Flashcards
+    function startFlashcardSession(containerId, cards) {
+      const container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+      if (!container) return;
+      if (!cards.length) {
+        container.innerHTML = '<div class="tool-empty">No flashcards available.</div>';
+        return;
+      }
+      container.dataset.sessionId = containerId;
+      window.flashcardSessions = window.flashcardSessions || {};
+      window.flashcardSessions[containerId] = { cards: [...cards], index: 0 };
+      renderTopFlashcard(containerId);
+    }
+
+    function getSession(containerId) {
+      return window.flashcardSessions?.[containerId];
+    }
+
+    function renderTopFlashcard(containerId) {
+      const session = getSession(containerId);
+      const stack = document.getElementById(containerId);
+      if (!session || !stack) return;
+      if (session.index >= session.cards.length) {
+        stack.innerHTML = '<div class="tool-empty"><b>All done!</b><div>You have reviewed all flashcards.</div></div>';
+        return;
+      }
+      const card = session.cards[session.index];
+      const remaining = session.cards.length - session.index;
+      stack.innerHTML = `
+        <div class="flashcard-meta">Card ${session.index + 1} of ${session.cards.length} · Click card or press Enter to flip</div>
+        <div class="flashcard-card" id="fcCard_${containerId}">
+          <div class="flashcard-face front">
+            <div class="flashcard-question">${escapeHtml(card.question)}</div>
+            <div class="flashcard-input"><input type="text" placeholder="Type your answer..." id="fcInput_${containerId}" onkeydown="if(event.key==='Enter')flipFlashcard('${containerId}')"></div>
+          </div>
+          <div class="flashcard-face back">
+            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">ANSWER</div>
+            <div class="flashcard-answer">${escapeHtml(card.answer)}</div>
+            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">YOUR ANSWER</div>
+            <div class="flashcard-answer" id="fcUser_${containerId}"></div>
+            <div class="flashcard-keywords" id="fcKeywords_${containerId}"></div>
+            <button class="btn btn-primary fc-next" onclick="nextFlashcard('${containerId}')">Next card</button>
+          </div>
+        </div>
+      `;
+      const cardEl = document.getElementById(`fcCard_${containerId}`);
+      cardEl.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') flipFlashcard(containerId);
+      });
+      setTimeout(() => document.getElementById(`fcInput_${containerId}`)?.focus(), 0);
+    }
+
+    function flipFlashcard(containerId) {
+      const cardEl = document.getElementById(`fcCard_${containerId}`);
+      if (!cardEl || cardEl.classList.contains('flipped')) return;
+      const session = getSession(containerId);
+      if (!session) return;
+      const card = session.cards[session.index];
+      const input = document.getElementById(`fcInput_${containerId}`);
+      const userAns = input ? input.value.trim() : '';
+      const userDisplay = document.getElementById(`fcUser_${containerId}`);
+      if (userDisplay) userDisplay.textContent = userAns || "You didn't type an answer.";
+      const kwContainer = document.getElementById(`fcKeywords_${containerId}`);
+      if (kwContainer && card.keywords) {
+        const userLower = userAns.toLowerCase();
+        kwContainer.innerHTML = card.keywords.map(kw => {
+          const missed = !userLower.includes(kw.toLowerCase());
+          return `<span class="flashcard-keyword ${missed ? 'missed' : ''}">${escapeHtml(kw)}</span>`;
+        }).join('');
+      }
+      cardEl.classList.add('flipped');
+    }
+
+    function nextFlashcard(containerId) {
+      const cardEl = document.getElementById(`fcCard_${containerId}`);
+      if (cardEl) {
+        cardEl.classList.add('leaving');
+        setTimeout(() => {
+          const session = getSession(containerId);
+          if (session) { session.index++; renderTopFlashcard(containerId); }
+        }, 400);
+      } else {
+        const session = getSession(containerId);
+        if (session) { session.index++; renderTopFlashcard(containerId); }
+      }
+    }
+
+    // Q-Bank
+    function renderQBankChapters() {
+      const container = document.getElementById('qbankChapters');
+      if (!container) return;
+      container.innerHTML = HANDS_ON_ML_DATA.chapters.map(ch => `
+        <label class="qbank-chapter">
+          <input type="checkbox" value="${ch.id}" checked>
+          <div>
+            <div class="qbank-chapter-title">${escapeHtml(ch.title)}</div>
+            <div class="qbank-chapter-count">${ch.flashcards?.length || 0} cards</div>
+          </div>
+        </label>
+      `).join('');
+    }
+
+    function startQBankRevision() {
+      const selected = Array.from(document.querySelectorAll('#qbankChapters input:checked')).map(cb => cb.value);
+      const cards = HANDS_ON_ML_DATA.chapters.filter(ch => selected.includes(ch.id)).flatMap(ch => ch.flashcards || []);
+      if (!cards.length) { alert('Select at least one chapter with flashcards.'); return; }
+      document.getElementById('qbankSession').style.display = 'block';
+      startFlashcardSession('qbankStack', cards);
+    }
+
+    function endQBankSession() {
+      document.getElementById('qbankSession').style.display = 'none';
+      document.getElementById('qbankStack').innerHTML = '';
+    }
+
+    // PDF viewer
+    window.pdfText = '';
+    window.pdfPages = [];
+    window.pdfItems = [];
+    window.pdfName = '';
+    window.currentPageItems = [];
+
+    const pdfPages = [
+      [
+        "<strong>Chapter 3: Force and Pressure</strong>",
+        "A force is a push or pull acting upon an object as a result of its interaction with another object. Forces can make objects start moving, stop moving, speed up, slow down, or change direction.",
+        "Force is measured in newtons (N). One newton is the force needed to accelerate a one-kilogram mass by one metre per second squared.",
+        "Pressure is defined as the force acting per unit area. The same force applied over a smaller area produces a greater pressure, which is why sharp knives cut more easily than blunt ones.",
+        "Liquids and gases exert pressure on the walls of their containers. Atmospheric pressure is the pressure exerted by the weight of the air above us."
+      ],
+      [
+        "<strong>3.1 Types of Forces</strong>",
+        "Forces can be broadly classified into contact forces and non-contact forces. Contact forces require physical touching, such as friction and muscular force.",
+        "Non-contact forces act at a distance. Examples include gravitational force, magnetic force, and electrostatic force.",
+        "Gravitational force is the force of attraction between any two objects with mass. It keeps planets in orbit and makes objects fall to the ground.",
+        "Magnetic force is the force exerted by magnets on magnetic materials like iron, nickel, and cobalt."
+      ],
+      [
+        "<strong>3.2 Effects of Force</strong>",
+        "A force can change the state of motion of an object. A stationary object can be made to move, and a moving object can be brought to rest.",
+        "Force can also change the speed of a moving object. When you pedal harder on a bicycle, the speed increases.",
+        "Force can change the direction of motion. A batsman changes the direction of a cricket ball by hitting it.",
+        "Force can change the shape and size of an object. Stretching a spring or squeezing a sponge are everyday examples."
+      ],
+      [
+        "<strong>3.3 Pressure in Fluids</strong>",
+        "Fluid pressure increases with depth. This is why divers feel more pressure as they go deeper underwater.",
+        "Fluid pressure acts in all directions. At any point inside a fluid, pressure is exerted equally in every direction.",
+        "The pressure exerted by a liquid column depends on its height, density, and acceleration due to gravity.",
+        "Hydraulic machines such as car brakes and jacks use the principle that pressure applied to an enclosed fluid is transmitted equally in all directions."
+      ],
+      [
+        "<strong>3.4 Atmospheric Pressure</strong>",
+        "Atmospheric pressure decreases with height. It is highest at sea level and lower on mountain tops.",
+        "A barometer is used to measure atmospheric pressure. The mercury barometer was invented by Evangelista Torricelli.",
+        "One atmosphere (1 atm) is the average pressure exerted by the Earth's atmosphere at sea level, equal to 101,325 pascals.",
+        "Drinking through a straw works because sucking reduces air pressure inside the straw, allowing atmospheric pressure to push the liquid up."
+      ]
+    ];
+
+    let currentPage = 0;
+    let pdfDoc = null;
+    let uploadedFileName = '';
+    let usePdfJs = false;
+    const pdfViewer = document.getElementById('pdfViewer');
+    const pdfCard = document.getElementById('pdfPageCard');
+    const pdfCanvas = document.getElementById('pdfCanvas');
+    const pdfTextLayer = document.getElementById('pdfTextLayer');
+    const pageCounter = document.getElementById('pageCounter');
+    const explanationBox = document.getElementById('explanationBox');
+    const ctx = pdfCanvas.getContext('2d');
+
+    function showFallback() {
+      pdfCard.style.display = 'block';
+      pdfCanvas.style.display = 'none';
+      pdfTextLayer.style.display = 'none';
+    }
+
+    function showPdfCanvas() {
+      pdfCard.style.display = 'none';
+      pdfCanvas.style.display = 'block';
+      pdfTextLayer.style.display = 'block';
+    }
+
+    function renderPage() {
+      explanationBox.innerHTML = '';
+      if (!usePdfJs) {
+        pdfCard.innerHTML = pdfPages[currentPage].map((p, i) => `<p data-idx="${i}">${p}</p>`).join('');
+        pageCounter.textContent = `Page ${currentPage + 1} / ${pdfPages.length}`;
+        showFallback();
+        bindParagraphClicks();
+        return;
+      }
+      pdfDoc.getPage(currentPage + 1).then(async page => {
+        pdfCard.style.display = 'none';
+        pdfCanvas.style.display = 'block';
+        pdfTextLayer.style.display = 'block';
+        const containerWidth = Math.max(300, pdfViewer.clientWidth - 56);
+        const viewport = page.getViewport({ scale: 1 });
+        const scale = Math.min(containerWidth / viewport.width, 1.4);
+        const scaledViewport = page.getViewport({ scale });
+        pdfCanvas.width = scaledViewport.width;
+        pdfCanvas.height = scaledViewport.height;
+        pdfCanvas.style.width = scaledViewport.width + 'px';
+        pdfCanvas.style.height = scaledViewport.height + 'px';
+        ctx.clearRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pdfCanvas.width, pdfCanvas.height);
+        const renderTask = page.render({ canvasContext: ctx, viewport: scaledViewport, background: 'white' });
+        await renderTask.promise;
+        const textContent = await page.getTextContent();
+        pdfTextLayer.innerHTML = '';
+        pdfTextLayer.style.width = scaledViewport.width + 'px';
+        pdfTextLayer.style.height = scaledViewport.height + 'px';
+        window.currentPageItems = textContent.items.map(item => ({ str: item.str || '', fontName: item.fontName || '', hasEOL: item.hasEOL }));
+        textContent.items.forEach((item, i) => {
+          const tx = pdfjsLib.Util.transform(scaledViewport.transform, item.transform);
+          const fontHeight = Math.hypot(tx[0], tx[1]);
+          const fontWidth = Math.hypot(tx[2], tx[3]);
+          const span = document.createElement('span');
+          span.textContent = item.str;
+          span.style.left = tx[4] + 'px';
+          span.style.top = (tx[5] - fontHeight) + 'px';
+          span.style.fontSize = fontHeight + 'px';
+          span.style.fontFamily = item.fontName || 'sans-serif';
+          span.style.transform = `scaleX(${item.width * scale / fontWidth})`;
+          span.dataset.index = i;
+          span.addEventListener('click', () => handleTextLayerClick(i));
+          pdfTextLayer.appendChild(span);
+        });
+        pageCounter.textContent = `Page ${currentPage + 1} / ${pdfDoc.numPages}`;
+      });
+    }
+
+    function sentenceSplit(text) {
+      if (!text) return [];
+      return text.match(/[^.!?]+[.!?]+['")]*(?:\s|$)|[^.!?]+$/g) || [text];
+    }
+
+    function handleTextLayerClick(index) {
+      const items = window.currentPageItems;
+      if (!items || !items[index]) return;
+      const { start, end, sentence } = findSentenceBounds(items, index);
+      highlightSentenceSpans(start, end);
+      explainText(sentence);
+    }
+
+    function findSentenceBounds(items, index) {
+      let start = index;
+      let end = index;
+      // Expand backward to start of sentence
+      while (start > 0) {
+        const prev = items[start - 1];
+        const curr = items[start];
+        if (prev.str.match(/[.!?]\s*$/) && curr.str.match(/^\s*[A-Z]/)) break;
+        if (prev.hasEOL && curr.str.match(/^\s*[A-Z]/)) break;
+        start--;
+      }
+      // Expand forward to end of sentence
+      while (end < items.length - 1) {
+        const curr = items[end];
+        const next = items[end + 1];
+        if (curr.str.match(/[.!?]\s*$/) && next.str.match(/^\s*[A-Z]/)) break;
+        if (curr.hasEOL && next.str.match(/^\s*[A-Z]/)) break;
+        if (curr.str.match(/[.!?]\s*$/)) break;
+        end++;
+      }
+      // Also use window.pdfText / sentenceSplit to refine the clean sentence
+      const raw = items.slice(start, end + 1).map(it => it.str).join('').replace(/\s+/g, ' ').trim();
+      const sentences = sentenceSplit(window.pdfText || raw);
+      let best = raw;
+      let bestScore = -1;
+      const clicked = items[index].str.trim();
+      sentences.forEach(s => {
+        const sNorm = s.replace(/\s+/g, ' ').trim();
+        if (sNorm.includes(clicked) || clicked.includes(sNorm) || raw.includes(sNorm)) {
+          const score = sNorm.length;
+          if (score > bestScore) { best = sNorm; bestScore = score; }
+        }
+      });
+      return { start, end, sentence: best };
+    }
+
+    function highlightSentenceSpans(start, end) {
+      const spans = pdfTextLayer.querySelectorAll('span');
+      spans.forEach(span => span.classList.remove('highlight-sentence'));
+      for (let i = start; i <= end; i++) {
+        const span = pdfTextLayer.querySelector(`span[data-index="${i}"]`);
+        if (span) span.classList.add('highlight-sentence');
+      }
+      setTimeout(() => {
+        spans.forEach(span => span.classList.remove('highlight-sentence'));
+      }, 1500);
+    }
+
+    async function extractAllText(pdf) {
+      const pages = [];
+      const allItems = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        let line = '';
+        const items = [];
+        textContent.items.forEach(item => {
+          const str = item.str || '';
+          if (!str.trim()) return;
+          line += (line ? ' ' : '') + str;
+          items.push({ str, fontName: item.fontName || '', hasEOL: item.hasEOL, page: i });
+          if (item.hasEOL) {
+            items.push({ str: '\n', fontName: '', hasEOL: false, page: i });
+            line = '';
+          }
+        });
+        pages.push(items.map(it => it.str).join(' ').replace(/  +/g, ' ').trim());
+        allItems.push(...items);
+      }
+      window.pdfPages = pages;
+      window.pdfText = pages.join('\n\n');
+      window.pdfItems = allItems;
+    }
+
+    function changePage(dir) {
+      if (!usePdfJs) {
+        currentPage = Math.max(0, Math.min(pdfPages.length - 1, currentPage + dir));
+      } else {
+        currentPage = Math.max(0, Math.min(pdfDoc.numPages - 1, currentPage + dir));
+      }
+      renderPage();
+    }
+
+    async function explainText(text) {
+      explanationBox.innerHTML = smartExplanation(text);
+    }
+
+    function smartExplanation(text) {
+      const q = text.toLowerCase().trim();
+      // Search flashcards
+      for (const ch of HANDS_ON_ML_DATA.chapters) {
+        for (const card of ch.flashcards || []) {
+          if ((card.question + ' ' + card.answer).toLowerCase().includes(q) || q.includes(card.question.toLowerCase().slice(0, 20))) {
+            return renderExplanation(card.question, card.answer, card.keywords);
+          }
+        }
+      }
+      // Search formulas
+      for (const f of HANDS_ON_ML_DATA.formulas || []) {
+        if (f.context.toLowerCase().includes(q) || q.includes(f.formula.toLowerCase())) {
+          return renderExplanation(f.formula, f.context, []);
+        }
+      }
+      // Search mnemonics
+      for (const m of HANDS_ON_ML_DATA.mnemonics || []) {
+        if (m.concept.toLowerCase().includes(q) || q.includes(m.concept.toLowerCase().slice(0, 20))) {
+          return renderExplanation(m.concept, m.mnemonic, []);
+        }
+      }
+      // Generic explanation
+      return renderExplanation('Selected text', escapeHtml(text), ['Try the Flashcards tab for more practice.']);
+    }
+
+    function renderExplanation(title, body, keywords) {
+      const kw = Array.isArray(keywords) && keywords.length ? `<div style="margin-top:8px;font-size:11px;color:var(--primary);font-weight:600;">Keywords: ${keywords.map(escapeHtml).join(' · ')}</div>` : '';
+      return `<div class="inline-explanation">
+        <span class="label">Explanation</span>
+        <div class="exp-text"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(body)}</div>
+        ${kw}
+      </div>`;
+    }
+
+    function bindParagraphClicks() {
+      pdfCard.querySelectorAll('p').forEach(p => {
+        p.addEventListener('click', () => explainText(p.textContent));
+      });
+    }
+
+    document.getElementById('pdfUpload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      uploadedFileName = file.name;
+      window.pdfName = file.name;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        const typedarray = new Uint8Array(ev.target.result);
+        pdfjsLib.getDocument({ data: typedarray }).promise.then(pdf => {
+          pdfDoc = pdf;
+          currentPage = 0;
+          usePdfJs = true;
+          window.pdfText = '';
+          window.pdfPages = [];
+          window.pdfItems = [];
+          renderPage();
+          extractAllText(pdf);
+        }).catch(err => {
+          alert('Could not load PDF: ' + err.message);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function initPageFromHash() {
+      const hash = window.location.hash.replace('#', '');
+      if (hash && document.getElementById(hash)) showPage(hash);
+    }
+
+    // Init
+    renderStaticTab('summary');
+    renderQBankChapters();
+    initPageFromHash();
+    window.addEventListener('hashchange', () => initPageFromHash());
+    renderPage();
+  </script>
+</body>
+</html>
