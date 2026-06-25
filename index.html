@@ -425,21 +425,22 @@
     .uc-day-num { font-size: 15px; font-weight: 700; margin-top: 2px; }
 
     /* FlipLearn page */
-    .fl-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; height: calc(100vh - var(--topbar-height) - 44px); }
+    .fl-layout { display: grid; grid-template-columns: 1.55fr 1fr; gap: 18px; height: calc(100vh - var(--topbar-height) - 44px); min-height: 0; }
     .fl-panel {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
       display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-sm);
     }
     .fl-panel-header {
       padding: 14px 16px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
     }
     .fl-panel-title { font-weight: 700; font-size: 15px; }
-    .fl-panel-body { flex: 1; overflow: auto; padding: 16px; }
-    .fl-right { display: flex; flex-direction: column; height: 100%; }
-    .fl-tools { flex: 1; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .fl-panel-body { flex: 1; overflow: auto; padding: 16px; min-height: 0; display: flex; flex-direction: column; }
+    .fl-right { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+    .fl-tools { flex: 1; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
 
     /* PDF viewer */
+    .pdf-viewer { position: relative; flex: 1; min-height: 260px; overflow: auto; }
     .pdf-tip {
       display: inline-flex; align-items: center; gap: 6px;
       font-size: 11px; color: var(--text-muted); background: var(--bg);
@@ -447,7 +448,7 @@
     }
     .pdf-page-card {
       background: white; border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 28px; min-height: 420px; box-shadow: var(--shadow-sm);
+      padding: 28px; min-height: 320px; box-shadow: var(--shadow-sm);
       font-size: 14px; line-height: 1.7; color: #374151;
       position: relative; overflow: auto;
     }
@@ -465,106 +466,177 @@
     .pdf-text-layer > span:hover { background: var(--primary); color: transparent; opacity: 0.15; }
     .pdf-text-layer > span.highlight-sentence { background: var(--primary); color: transparent; opacity: 0.25; }
     .pdf-nav {
-      display: flex; align-items: center; justify-content: space-between; margin-top: 14px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
     }
     .pdf-counter { font-size: 12px; color: var(--text-muted); font-weight: 500; }
-    .inline-explanation {
+    .ai-explanation {
       background: var(--primary-soft); border-left: 3px solid var(--primary); border-radius: 0 var(--radius) var(--radius) 0;
-      padding: 12px 14px; margin: 10px 0 16px; font-size: 13px;
+      padding: 12px 14px; margin-top: 12px; font-size: 13px;
     }
-    .inline-explanation .label { color: var(--primary); font-weight: 700; font-size: 11px; margin-bottom: 6px; display: block; }
-    .inline-explanation .exp-text { color: var(--text); margin-bottom: 8px; }
-    .inline-explanation .mnemonic { color: var(--text-muted); font-size: 12px; margin-bottom: 8px; }
+    .ai-explanation .label { color: var(--primary); font-weight: 700; font-size: 11px; margin-bottom: 6px; display: block; }
+    .ai-explanation .exp-text { color: var(--text); margin-bottom: 8px; }
+    .ai-explanation .mnemonic { color: var(--text-muted); font-size: 12px; margin-bottom: 10px; font-style: italic; }
+    .ai-explanation .talk-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--primary); color: white; border: none; border-radius: 999px;
+      padding: 7px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .ai-explanation .talk-btn:hover { background: #6d28d9; }
 
     /* Tabs */
-    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 16px; }
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding: 0 12px; flex-shrink: 0; overflow-x: auto; }
     .tab {
-      padding: 10px 12px; font-size: 12px; font-weight: 600; color: var(--text-muted);
-      border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+      padding: 10px 10px; font-size: 12px; font-weight: 600; color: var(--text-muted);
+      border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
     }
+    .tab:hover { color: var(--text); }
     .tab.active { color: var(--primary); border-color: var(--primary); }
+    .tab-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 999px;
+      background: var(--green-light); color: var(--green); text-transform: uppercase; letter-spacing: .03em;
+    }
 
     /* AI tools content */
     .tool-content { display: none; padding: 14px; overflow: auto; flex: 1; }
     .tool-content.active { display: block; }
-    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .summary-card {
-      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 12px; font-size: 12px; color: var(--text);
-    }
-    .summary-card b { color: var(--primary); }
+    .tool-empty { font-size: 13px; color: var(--text-muted); padding: 20px; text-align: center; }
     .tool-para { font-size: 13px; line-height: 1.7; color: var(--text); }
-    .keyword-card {
-      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 12px; margin-bottom: 10px;
+    .keypoints-list { list-style: none; padding: 0; margin: 0; }
+    .keypoints-list li {
+      position: relative; padding-left: 18px; margin-bottom: 10px;
+      font-size: 13px; line-height: 1.6; color: var(--text);
     }
-    .keyword-term { font-weight: 700; color: var(--primary); font-size: 13px; margin-bottom: 6px; display:flex; align-items:center; gap:6px; }
-    .keyword-context { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-    .mindmap-wrap { display: flex; justify-content: center; align-items: center; height: 100%; overflow: auto; background: var(--primary-soft); border-radius: var(--radius); }
-    .mindmap-svg { min-width: 820px; min-height: 620px; }
+    .keypoints-list li::before {
+      content: ''; position: absolute; left: 0; top: 7px;
+      width: 7px; height: 7px; border-radius: 50%; background: var(--primary);
+    }
+    .mindmap-wrap { display: flex; justify-content: center; align-items: center; min-height: 240px; overflow: auto; background: var(--primary-soft); border-radius: var(--radius); }
+    .mindmap-svg { min-width: 600px; min-height: 460px; }
     .mindmap-link { stroke: #c4b5fd; stroke-width: 2; fill: none; }
     .mindmap-node { cursor: default; transition: .2s; }
     .mindmap-node:hover circle { stroke: var(--primary); stroke-width: 3; }
-    .mindmap-node text { font-size: 12px; font-weight: 600; fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: middle; }
-    .mindmap-root text { fill: white; font-size: 14px; font-weight: 700; }
+    .mindmap-node text { font-size: 11px; font-weight: 600; fill: var(--text); pointer-events: none; text-anchor: middle; dominant-baseline: middle; }
+    .mindmap-root text { fill: white; font-size: 13px; font-weight: 700; }
     .mindmap-main text { fill: var(--primary); }
-    .formula-card {
+    .diagram-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+    .diagram-card {
       background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px; margin-bottom: 10px;
+      padding: 14px;
     }
-    .formula-line {
+    .diagram-title {
       font-family: 'Courier New', monospace; font-size: 14px; color: var(--primary);
       background: var(--primary-soft); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px;
     }
-    .formula-highlight { background: #fde68a; color: #92400e; border-radius: 3px; padding: 0 2px; }
-    .formula-context { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-
-    /* Mnemonics */
-    .mnemonic-card {
-      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 14px; margin-bottom: 10px;
-    }
-    .mnemonic-concept { font-weight: 700; color: var(--primary); font-size: 13px; margin-bottom: 6px; }
-    .mnemonic-text { font-size: 13px; color: var(--text); line-height: 1.55; }
+    .diagram-context { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
     /* Flashcards */
-    .flashcard-stack { position: relative; height: 360px; perspective: 1000px; }
+    .flashcard-section { padding: 0 14px 14px; }
+    .flashcard-section-header { margin-bottom: 12px; }
+    .flashcard-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .flashcard-section-subtitle { font-size: 12px; color: var(--text-muted); }
+    .flashcard-stack { position: relative; height: 260px; perspective: 1000px; }
     .flashcard-card {
       position: absolute; width: 100%; height: 100%;
-      transform-style: preserve-3d; transition: transform 0.5s;
-    }
-    .flashcard-card.flipped { transform: rotateY(180deg); }
-    .flashcard-card.leaving { transform: translateX(120%) rotate(10deg); opacity: 0; }
-    .flashcard-face {
-      position: absolute; width: 100%; height: 100%;
-      backface-visibility: hidden;
-      border-radius: var(--radius); padding: 16px;
+      transform-style: preserve-3d; transition: transform 0.4s, opacity 0.3s;
+      border-radius: var(--radius); overflow: hidden;
       background: var(--surface); border: 1px solid var(--border);
       box-shadow: var(--shadow);
       display: flex; flex-direction: column;
     }
-    .flashcard-face.back {
-      transform: rotateY(180deg);
-      background: var(--primary-soft);
+    .flashcard-card.revealed .flashcard-reveal-bar { display: none; }
+    .flashcard-card-header {
+      background: var(--primary); color: white;
+      padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
     }
-    .flashcard-question { font-weight: 600; font-size: 14px; margin-bottom: 12px; flex-shrink: 0; }
-    .flashcard-input { margin-top: auto; }
-    .flashcard-input input {
-      width: 100%; border: 1px solid var(--border); border-radius: 8px;
-      padding: 10px 12px; font-size: 13px; outline: none;
+    .flashcard-card-title { font-weight: 700; font-size: 15px; }
+    .flashcard-card-counter { font-size: 12px; font-weight: 600; opacity: 0.9; }
+    .flashcard-card-body {
+      flex: 1; padding: 16px; font-size: 13px; line-height: 1.6; color: var(--text); overflow: auto;
     }
-    .flashcard-input input:focus { border-color: var(--primary); }
-    .flashcard-answer { font-size: 13px; color: var(--text); margin-bottom: 10px; }
-    .flashcard-keywords { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .flashcard-keyword {
-      font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 999px;
+    .flashcard-card-body.hidden { display: none; }
+    .flashcard-reveal-bar {
+      margin-top: auto; border-top: 1px solid var(--border); padding: 12px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      color: var(--primary); font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    .flashcard-reveal-bar:hover { background: var(--primary-soft); }
+    .flashcard-arrows {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 14px;
+    }
+    .flashcard-arrow {
+      width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border);
+      background: var(--surface); display: grid; place-items: center; cursor: pointer; color: var(--primary);
+    }
+    .flashcard-arrow:hover { background: var(--primary-soft); }
+    .flashcard-dots { display: flex; gap: 5px; }
+    .flashcard-dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); cursor: pointer;
+    }
+    .flashcard-dot.active { background: var(--primary); }
+
+    /* PYQ / Ask section */
+    .pyq-section { padding: 14px; border-top: 1px solid var(--border); }
+    .pyq-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .pyq-title { font-size: 13px; font-weight: 700; color: var(--text); }
+    .pyq-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px;
       background: var(--primary-light); color: var(--primary);
     }
-    .flashcard-keyword.missed { background: #fee2e2; color: #b91c1c; }
-    .fc-next { margin-top: auto; }
-    .flashcard-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .pyq-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .pyq-btn {
+      padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px;
+      background: var(--surface); color: var(--text); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: .15s;
+    }
+    .pyq-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+    .answer-area {
+      border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; margin-bottom: 12px;
+    }
+    .answer-area textarea {
+      width: 100%; min-height: 80px; border: none; outline: none; padding: 12px;
+      font-size: 13px; line-height: 1.5; resize: vertical; font-family: inherit;
+    }
+    .answer-area textarea::placeholder { color: var(--text-light); }
+    .answer-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; border-top: 1px solid var(--border);
+    }
+    .answer-toolbar-left { display: flex; gap: 6px; }
+    .format-btn {
+      width: 26px; height: 26px; border-radius: 4px; border: none; background: transparent;
+      color: var(--text-muted); font-weight: 700; cursor: pointer; display: grid; place-items: center;
+    }
+    .format-btn:hover { background: var(--bg); color: var(--text); }
+    .answer-count { font-size: 11px; color: var(--text-muted); }
+    .ask-input-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .ask-input {
+      flex: 1; border: 1px solid var(--border); border-radius: 999px;
+      padding: 9px 14px; font-size: 13px; outline: none; background: var(--bg);
+    }
+    .ask-input:focus { border-color: var(--primary); background: var(--surface); }
+    .ask-send {
+      width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--primary);
+      color: white; display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
+    }
+    .ask-send:hover { background: #6d28d9; }
+
+    /* Gemini settings */
+    .gemini-key-row {
+      display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg);
+    }
+    .gemini-key-row label { font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+    .gemini-key-row input {
+      flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+      font-size: 12px; outline: none; background: var(--surface);
+    }
+    .gemini-key-row input:focus { border-color: var(--primary); }
 
     /* Q-Bank */
+    .qbank-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
     .qbank-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
     .qbank-chapter {
       border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
@@ -584,7 +656,20 @@
     @media (max-width: 1200px) {
       .dashboard-grid { grid-template-columns: 1fr; }
       .feature-row { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 1024px) {
       .fl-layout { grid-template-columns: 1fr; height: auto; }
+      .fl-right { height: auto; min-height: 600px; }
+      .fl-panel-body { overflow: visible; }
+      .pdf-viewer { min-height: 360px; }
+    }
+    @media (max-width: 640px) {
+      .fl-layout { gap: 12px; }
+      .fl-panel-body { padding: 10px; }
+      .pdf-page-card { padding: 16px; min-height: 260px; }
+      .flashcard-stack { height: 240px; }
+      .pyq-buttons { gap: 6px; }
+      .pyq-btn { font-size: 10px; padding: 5px 8px; }
     }
   </style>
 </head>
@@ -1216,7 +1301,7 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                   Tap any sentence for an explanation
                 </div>
-                <div id="pdfViewer" class="pdf-viewer" style="position:relative; min-height:420px;">
+                <div id="pdfViewer" class="pdf-viewer">
                   <div id="pdfPageCard" class="pdf-page-card">
                     <p data-idx="0"><strong>Chapter 3: Force and Pressure</strong></p>
                     <p data-idx="1">A force is a push or pull acting upon an object as a result of its interaction with another object. Forces can make objects start moving, stop moving, speed up, slow down, or change direction.</p>
@@ -1227,10 +1312,26 @@
                   <canvas id="pdfCanvas" style="display:none;"></canvas>
                   <div id="pdfTextLayer" class="pdf-text-layer" style="display:none;"></div>
                 </div>
-                <div id="explanationBox"></div>
+                <div id="explanationBox" class="ai-explanation" style="display:none;">
+                  <span class="label">AI Explanation</span>
+                  <div class="exp-text" id="explanationText">Tap a sentence in the PDF to get an explanation.</div>
+                  <div class="mnemonic" id="explanationMnemonic" style="display:none;"></div>
+                  <button class="talk-btn" onclick="fillAskInput(document.getElementById('explanationText').textContent)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Talk to this
+                  </button>
+                </div>
                 <div class="pdf-nav">
                   <button class="btn btn-secondary btn-sm" onclick="changePage(-1)">Previous</button>
-                  <span class="pdf-counter" id="pageCounter">Page 1 / 5</span>
+                  <div style="display:flex;align-items:center;gap:12px;">
+                    <button class="icon-btn" title="Share" onclick="sharePage()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    </button>
+                    <span class="pdf-counter" id="pageCounter">Page 1 / 5</span>
+                    <button class="icon-btn" title="Fullscreen" onclick="toggleFullscreen()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                    </button>
+                  </div>
                   <button class="btn btn-secondary btn-sm" onclick="changePage(1)">Next</button>
                 </div>
               </div>
@@ -1241,20 +1342,58 @@
               <div class="fl-tools">
                 <div class="fl-panel-header">
                   <div class="fl-panel-title">AI Study Tools</div>
+                  <button class="btn btn-primary btn-sm" onclick="generateForChapter()">Generate for this chapter</button>
+                </div>
+                <div class="gemini-key-row">
+                  <label for="geminiKey">Gemini API Key</label>
+                  <input type="password" id="geminiKey" placeholder="Paste your Gemini API key here (optional)">
                 </div>
 
                 <div class="tabs">
-                  <div class="tab active" data-tab="summary" onclick="switchTab('summary')">Summary</div>
-                  <div class="tab" data-tab="mindmap" onclick="switchTab('mindmap')">Mindmap</div>
-                  <div class="tab" data-tab="formulas" onclick="switchTab('formulas')">Formulas</div>
-                  <div class="tab" data-tab="mnemonics" onclick="switchTab('mnemonics')">Mnemonics</div>
+                  <div class="tab active" data-tab="aiNotes" onclick="switchTab('aiNotes')">AI Notes</div>
                   <div class="tab" data-tab="flashcards" onclick="switchTab('flashcards')">Flashcards</div>
+                  <div class="tab" data-tab="keyPoints" onclick="switchTab('keyPoints')">Key Points <span class="tab-badge">New</span></div>
+                  <div class="tab" data-tab="flowchart" onclick="switchTab('flowchart')">Flowchart</div>
+                  <div class="tab" data-tab="diagrams" onclick="switchTab('diagrams')">Diagrams</div>
                 </div>
-                <div class="tool-content active" id="summary"></div>
-                <div class="tool-content" id="mindmap"></div>
-                <div class="tool-content" id="formulas"></div>
-                <div class="tool-content" id="mnemonics"></div>
+                <div class="tool-content active" id="aiNotes"></div>
                 <div class="tool-content" id="flashcards"></div>
+                <div class="tool-content" id="keyPoints"></div>
+                <div class="tool-content" id="flowchart"></div>
+                <div class="tool-content" id="diagrams"></div>
+              </div>
+
+              <!-- PYQ / Ask section -->
+              <div class="pyq-section">
+                <div class="pyq-header">
+                  <div class="pyq-title">Ask questions - PYQ practice</div>
+                  <span class="pyq-badge">Ask question for 0-3 marks</span>
+                </div>
+                <div class="pyq-buttons">
+                  <button class="pyq-btn" onclick="fillAskInput('Generate MCQs on this chapter')">MCQs on this chapter</button>
+                  <button class="pyq-btn" onclick="fillAskInput('Generate PYQs on this topic')">PYQs on this topic</button>
+                  <button class="pyq-btn" onclick="fillAskInput('Explain this step')">Explain this step</button>
+                  <button class="pyq-btn" onclick="fillAskInput('Give a similar example')">Give a similar example</button>
+                </div>
+                <div class="answer-area">
+                  <textarea id="answerArea" placeholder="Type your answer here..."></textarea>
+                  <div class="answer-toolbar">
+                    <div class="answer-toolbar-left">
+                      <button class="format-btn" title="Bold" onclick="wrapSelection('answerArea','**','**')">B</button>
+                      <button class="format-btn" title="Italic" onclick="wrapSelection('answerArea','*','*')">I</button>
+                      <button class="format-btn" title="Underline" onclick="wrapSelection('answerArea','__','__')">U</button>
+                      <button class="format-btn" title="Bullet list" onclick="insertPrefix('answerArea','- ')">☰</button>
+                      <button class="format-btn" title="Numbered list" onclick="insertPrefix('answerArea','1. ')">1.</button>
+                    </div>
+                    <span class="answer-count" id="answerCount">0 / 1000</span>
+                  </div>
+                </div>
+                <div class="ask-input-row">
+                  <input type="text" class="ask-input" id="askInput" placeholder="Ask about this chapter...">
+                  <button class="ask-send" onclick="sendAsk()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1269,6 +1408,7 @@
             <div style="padding: 0 20px 18px;">
               <div style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">Select chapters to review:</div>
               <div class="qbank-chapters" id="qbankChapters"></div>
+              <div class="qbank-empty" id="qbankEmpty" style="display:block;">Select chapters to start revising</div>
               <button class="btn btn-primary" onclick="startQBankRevision()" style="margin-top:14px;">Start Revision</button>
             </div>
           </div>
@@ -1589,59 +1729,62 @@
 
     function goToFlipLearn() { showPage('fliplearn'); }
 
-    // Static study tools
+    // AI Study Tools tabs
+    window.aiData = {
+      aiNotes: HANDS_ON_ML_DATA.summary,
+      flashcards: HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer }))),
+      keyPoints: HANDS_ON_ML_DATA.mnemonics.map(m => `${m.concept}: ${m.mnemonic}`),
+      flowchart: HANDS_ON_ML_DATA.mindmap,
+      diagrams: HANDS_ON_ML_DATA.formulas
+    };
+
     function switchTab(tab) {
       document.querySelectorAll('.fl-tools .tab').forEach(t => t.classList.remove('active'));
       document.querySelector(`.fl-tools .tab[data-tab="${tab}"]`)?.classList.add('active');
       document.querySelectorAll('.fl-tools .tool-content').forEach(c => c.classList.remove('active'));
       document.getElementById(tab)?.classList.add('active');
-      renderStaticTab(tab);
+      renderToolTab(tab);
     }
 
-    function renderStaticTab(tab) {
+    function renderToolTab(tab) {
       const container = document.getElementById(tab);
       if (!container) return;
-      if (tab === 'summary') {
-        container.innerHTML = renderSummary(HANDS_ON_ML_DATA.summary);
-      } else if (tab === 'mindmap') {
-        const related = {};
-        HANDS_ON_ML_DATA.mindmap.branches.forEach(b => related[b.name] = b.children);
-        container.innerHTML = renderMindmapSVG(HANDS_ON_ML_DATA.mindmap.root, HANDS_ON_ML_DATA.mindmap.branches.map(b => b.name), related);
-      } else if (tab === 'formulas') {
-        container.innerHTML = renderFormulas({ formulas: HANDS_ON_ML_DATA.formulas });
-      } else if (tab === 'mnemonics') {
-        container.innerHTML = renderMnemonics({ mnemonics: HANDS_ON_ML_DATA.mnemonics });
+      if (tab === 'aiNotes') {
+        container.innerHTML = renderNotes(window.aiData.aiNotes);
       } else if (tab === 'flashcards') {
-        const allCards = HANDS_ON_ML_DATA.chapters.flatMap(c => c.flashcards || []);
-        startFlashcardSession('flashcards', allCards);
+        renderFlashcardStack('flashcards', window.aiData.flashcards);
+      } else if (tab === 'keyPoints') {
+        container.innerHTML = renderKeyPoints(window.aiData.keyPoints);
+      } else if (tab === 'flowchart') {
+        const mm = window.aiData.flowchart;
+        const related = {};
+        mm.branches.forEach(b => related[b.name] = b.children);
+        container.innerHTML = renderMindmapSVG(mm.root, mm.branches.map(b => b.name), related);
+      } else if (tab === 'diagrams') {
+        container.innerHTML = renderDiagrams(window.aiData.diagrams);
       }
     }
 
-    function renderSummary(text) {
+    function renderNotes(text) {
       return `<div class="tool-para"><strong>${escapeHtml(HANDS_ON_ML_DATA.title)}</strong><br><br>${escapeHtml(text)}</div>`;
     }
 
-    function renderFormulas(data) {
-      const formulas = Array.isArray(data?.formulas) ? data.formulas : [];
-      if (!formulas.length) return `<div class="tool-empty">No formulas available.</div>`;
-      return formulas.map(f => `<div class="formula-card">
-        <div class="formula-line">${escapeHtml(f.formula || '')}</div>
-        <div class="formula-context">${escapeHtml(f.context || '')}</div>
-      </div>`).join('');
+    function renderKeyPoints(points) {
+      if (!points.length) return '<div class="tool-empty">No key points available.</div>';
+      return `<ul class="keypoints-list">${points.map(p => `<li>${escapeHtml(p)}</li>`).join('')}</ul>`;
     }
 
-    function renderMnemonics(data) {
-      const mnemonics = Array.isArray(data?.mnemonics) ? data.mnemonics : [];
-      if (!mnemonics.length) return `<div class="tool-empty">No mnemonics available.</div>`;
-      return mnemonics.map(m => `<div class="mnemonic-card">
-        <div class="mnemonic-concept">${escapeHtml(m.concept || '')}</div>
-        <div class="mnemonic-text">${escapeHtml(m.mnemonic || '')}</div>
-      </div>`).join('');
+    function renderDiagrams(formulas) {
+      if (!formulas.length) return '<div class="tool-empty">No diagrams available.</div>';
+      return `<div class="diagram-grid">${formulas.map(f => `<div class="diagram-card">
+        <div class="diagram-title">${escapeHtml(f.formula || '')}</div>
+        <div class="diagram-context">${escapeHtml(f.context || '')}</div>
+      </div>`).join('')}</div>`;
     }
 
     function renderMindmapSVG(root, branches, related) {
-      const w = 820, h = 620, cx = w/2, cy = h/2;
-      const radius = 180;
+      const w = 760, h = 520, cx = w/2, cy = h/2;
+      const radius = 160;
       const angleStep = (2 * Math.PI) / Math.max(branches.length, 1);
       let svg = `<svg class="mindmap-svg" viewBox="0 0 ${w} ${h}">`;
       svg += `<defs><radialGradient id="mmBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#f5f3ff"/><stop offset="100%" stop-color="#ede9fe"/></radialGradient></defs>`;
@@ -1657,7 +1800,7 @@
       });
       mainNodes.forEach(n => {
         const subs = related[n.term] || [];
-        const subRadius = 90;
+        const subRadius = 80;
         const subStep = Math.PI / (Math.max(subs.length + 1, 2));
         subs.forEach((sub, j) => {
           const subAngle = n.angle + (j+1) * subStep - (subs.length+1)*subStep/2;
@@ -1665,20 +1808,20 @@
           const sy = n.y + Math.sin(subAngle) * subRadius;
           svg += `<line class="mindmap-link" x1="${n.x}" y1="${n.y}" x2="${sx}" y2="${sy}"/>`;
           svg += `<g class="mindmap-node">
-            <circle cx="${sx}" cy="${sy}" r="36" fill="white" stroke="#c4b5fd" stroke-width="2"/>
-            <text x="${sx}" y="${sy}">${wrapText(escapeHtml(sub), 10)}</text>
+            <circle cx="${sx}" cy="${sy}" r="32" fill="white" stroke="#c4b5fd" stroke-width="2"/>
+            <text x="${sx}" y="${sy}">${wrapText(escapeHtml(sub), 9)}</text>
           </g>`;
         });
       });
       mainNodes.forEach(n => {
         svg += `<g class="mindmap-node">
-          <circle cx="${n.x}" cy="${n.y}" r="52" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
-          <text x="${n.x}" y="${n.y}" style="fill:#7c3aed;">${wrapText(escapeHtml(n.term), 14)}</text>
+          <circle cx="${n.x}" cy="${n.y}" r="48" fill="#f5f3ff" stroke="#7c3aed" stroke-width="2"/>
+          <text x="${n.x}" y="${n.y}" style="fill:#7c3aed;">${wrapText(escapeHtml(n.term), 12)}</text>
         </g>`;
       });
       svg += `<g class="mindmap-node mindmap-root">
-        <circle cx="${cx}" cy="${cy}" r="64" fill="#7c3aed"/>
-        <text x="${cx}" y="${cy}">${wrapText(escapeHtml(root), 16)}</text>
+        <circle cx="${cx}" cy="${cy}" r="58" fill="#7c3aed"/>
+        <text x="${cx}" y="${cy}">${wrapText(escapeHtml(root), 14)}</text>
       </g>`;
       svg += `</svg>`;
       return `<div class="mindmap-wrap">${svg}</div>`;
@@ -1697,119 +1840,167 @@
       return lines.map((l,i) => `<tspan dy="${i===0?'0':'1.2em'}">${l}</tspan>`).join('');
     }
 
-    // Flashcards
-    function startFlashcardSession(containerId, cards) {
-      const container = typeof containerId === 'string' ? document.getElementById(containerId) : containerId;
+    // Flashcard stack
+    function renderFlashcardStack(containerId, cards) {
+      const container = document.getElementById(containerId);
       if (!container) return;
       if (!cards.length) {
         container.innerHTML = '<div class="tool-empty">No flashcards available.</div>';
         return;
       }
-      container.dataset.sessionId = containerId;
       window.flashcardSessions = window.flashcardSessions || {};
-      window.flashcardSessions[containerId] = { cards: [...cards], index: 0 };
-      renderTopFlashcard(containerId);
+      window.flashcardSessions[containerId] = { cards: [...cards], index: 0, revealed: false };
+      drawFlashcardStack(containerId);
     }
 
     function getSession(containerId) {
       return window.flashcardSessions?.[containerId];
     }
 
-    function renderTopFlashcard(containerId) {
+    function drawFlashcardStack(containerId) {
       const session = getSession(containerId);
-      const stack = document.getElementById(containerId);
-      if (!session || !stack) return;
-      if (session.index >= session.cards.length) {
-        stack.innerHTML = '<div class="tool-empty"><b>All done!</b><div>You have reviewed all flashcards.</div></div>';
-        return;
+      const container = document.getElementById(containerId);
+      if (!session || !container) return;
+      const cards = session.cards;
+      const idx = session.index;
+      const total = cards.length;
+      const current = cards[idx];
+      const stackCount = Math.min(4, total - idx);
+      let html = `
+        <div class="flashcard-section-header">
+          <div class="flashcard-section-title">Flashcard Stack</div>
+          <div class="flashcard-section-subtitle">Interactive Study Deck</div>
+        </div>
+        <div class="flashcard-stack" id="fcStack_${containerId}">
+      `;
+      for (let i = stackCount - 1; i >= 0; i--) {
+        const offset = (stackCount - 1 - i) * 6;
+        const scale = 1 - (stackCount - 1 - i) * 0.03;
+        const zIndex = stackCount - i;
+        const card = cards[idx + i];
+        const isTop = i === 0;
+        html += `
+          <div class="flashcard-card ${session.revealed ? 'revealed' : ''}" id="fcCard_${containerId}_${i}"
+               style="top:${offset}px;left:${offset}px;transform:scale(${scale});z-index:${zIndex};"
+               onclick="${isTop ? `toggleReveal('${containerId}')` : ''}">
+            <div class="flashcard-card-header">
+              <div class="flashcard-card-title">${escapeHtml((isTop ? current.title : card.title || '').toString().slice(0, 40))}${(isTop && current.title.length > 40) ? '…' : ''}</div>
+              <div class="flashcard-card-counter">${idx + 1} / ${total}</div>
+            </div>
+            <div class="flashcard-card-body" id="fcBody_${containerId}_${i}" ${session.revealed && isTop ? '' : 'style="display:none;"'}>
+              ${escapeHtml(card.content || '')}
+            </div>
+            ${isTop && !session.revealed ? `
+              <div class="flashcard-reveal-bar" onclick="event.stopPropagation();toggleReveal('${containerId}')">
+                Click to reveal answer
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </div>
+            ` : ''}
+          </div>
+        `;
       }
-      const card = session.cards[session.index];
-      const remaining = session.cards.length - session.index;
-      stack.innerHTML = `
-        <div class="flashcard-meta">Card ${session.index + 1} of ${session.cards.length} · Click card or press Enter to flip</div>
-        <div class="flashcard-card" id="fcCard_${containerId}">
-          <div class="flashcard-face front">
-            <div class="flashcard-question">${escapeHtml(card.question)}</div>
-            <div class="flashcard-input"><input type="text" placeholder="Type your answer..." id="fcInput_${containerId}" onkeydown="if(event.key==='Enter')flipFlashcard('${containerId}')"></div>
-          </div>
-          <div class="flashcard-face back">
-            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">ANSWER</div>
-            <div class="flashcard-answer">${escapeHtml(card.answer)}</div>
-            <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:6px;">YOUR ANSWER</div>
-            <div class="flashcard-answer" id="fcUser_${containerId}"></div>
-            <div class="flashcard-keywords" id="fcKeywords_${containerId}"></div>
-            <button class="btn btn-primary fc-next" onclick="nextFlashcard('${containerId}')">Next card</button>
-          </div>
+      html += `</div>`;
+      html += `
+        <div class="flashcard-arrows">
+          <button class="flashcard-arrow" onclick="prevFlashcard('${containerId}')" title="Previous">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="flashcard-dots" id="fcDots_${containerId}"></div>
+          <button class="flashcard-arrow" onclick="nextFlashcard('${containerId}')" title="Next">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
         </div>
       `;
-      const cardEl = document.getElementById(`fcCard_${containerId}`);
-      cardEl.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') flipFlashcard(containerId);
-      });
-      setTimeout(() => document.getElementById(`fcInput_${containerId}`)?.focus(), 0);
+      container.innerHTML = html;
+      drawDots(containerId);
     }
 
-    function flipFlashcard(containerId) {
-      const cardEl = document.getElementById(`fcCard_${containerId}`);
-      if (!cardEl || cardEl.classList.contains('flipped')) return;
+    function drawDots(containerId) {
+      const session = getSession(containerId);
+      const dots = document.getElementById(`fcDots_${containerId}`);
+      if (!session || !dots) return;
+      const total = session.cards.length;
+      const idx = session.index;
+      const maxDots = 12;
+      dots.innerHTML = '';
+      for (let i = 0; i < Math.min(total, maxDots); i++) {
+        const dot = document.createElement('span');
+        dot.className = 'flashcard-dot ' + (i === idx ? 'active' : '');
+        dot.onclick = () => { session.index = i; session.revealed = false; drawFlashcardStack(containerId); };
+        dots.appendChild(dot);
+      }
+    }
+
+    function toggleReveal(containerId) {
       const session = getSession(containerId);
       if (!session) return;
-      const card = session.cards[session.index];
-      const input = document.getElementById(`fcInput_${containerId}`);
-      const userAns = input ? input.value.trim() : '';
-      const userDisplay = document.getElementById(`fcUser_${containerId}`);
-      if (userDisplay) userDisplay.textContent = userAns || "You didn't type an answer.";
-      const kwContainer = document.getElementById(`fcKeywords_${containerId}`);
-      if (kwContainer && card.keywords) {
-        const userLower = userAns.toLowerCase();
-        kwContainer.innerHTML = card.keywords.map(kw => {
-          const missed = !userLower.includes(kw.toLowerCase());
-          return `<span class="flashcard-keyword ${missed ? 'missed' : ''}">${escapeHtml(kw)}</span>`;
-        }).join('');
-      }
-      cardEl.classList.add('flipped');
+      session.revealed = !session.revealed;
+      drawFlashcardStack(containerId);
     }
 
     function nextFlashcard(containerId) {
-      const cardEl = document.getElementById(`fcCard_${containerId}`);
-      if (cardEl) {
-        cardEl.classList.add('leaving');
-        setTimeout(() => {
-          const session = getSession(containerId);
-          if (session) { session.index++; renderTopFlashcard(containerId); }
-        }, 400);
-      } else {
-        const session = getSession(containerId);
-        if (session) { session.index++; renderTopFlashcard(containerId); }
+      const session = getSession(containerId);
+      if (!session) return;
+      if (session.index < session.cards.length - 1) {
+        session.index++;
+        session.revealed = false;
+        drawFlashcardStack(containerId);
+      }
+    }
+
+    function prevFlashcard(containerId) {
+      const session = getSession(containerId);
+      if (!session) return;
+      if (session.index > 0) {
+        session.index--;
+        session.revealed = false;
+        drawFlashcardStack(containerId);
       }
     }
 
     // Q-Bank
     function renderQBankChapters() {
       const container = document.getElementById('qbankChapters');
+      const emptyMsg = document.getElementById('qbankEmpty');
       if (!container) return;
+      if (!HANDS_ON_ML_DATA.chapters.length) {
+        container.innerHTML = '<div class="qbank-empty">No chapters available.</div>';
+        if (emptyMsg) emptyMsg.style.display = 'none';
+        return;
+      }
       container.innerHTML = HANDS_ON_ML_DATA.chapters.map(ch => `
         <label class="qbank-chapter">
-          <input type="checkbox" value="${ch.id}" checked>
+          <input type="checkbox" value="${ch.id}">
           <div>
             <div class="qbank-chapter-title">${escapeHtml(ch.title)}</div>
             <div class="qbank-chapter-count">${ch.flashcards?.length || 0} cards</div>
           </div>
         </label>
       `).join('');
+      document.getElementById('qbankSession').style.display = 'none';
+      document.getElementById('qbankStack').innerHTML = '';
+      if (emptyMsg) emptyMsg.style.display = 'block';
     }
 
     function startQBankRevision() {
       const selected = Array.from(document.querySelectorAll('#qbankChapters input:checked')).map(cb => cb.value);
+      if (!selected.length) {
+        alert('Select chapters to start revising');
+        return;
+      }
       const cards = HANDS_ON_ML_DATA.chapters.filter(ch => selected.includes(ch.id)).flatMap(ch => ch.flashcards || []);
-      if (!cards.length) { alert('Select at least one chapter with flashcards.'); return; }
+      if (!cards.length) { alert('Selected chapters have no flashcards.'); return; }
       document.getElementById('qbankSession').style.display = 'block';
-      startFlashcardSession('qbankStack', cards);
+      const emptyMsg = document.getElementById('qbankEmpty');
+      if (emptyMsg) emptyMsg.style.display = 'none';
+      renderFlashcardStack('qbankStack', cards);
     }
 
     function endQBankSession() {
       document.getElementById('qbankSession').style.display = 'none';
       document.getElementById('qbankStack').innerHTML = '';
+      const emptyMsg = document.getElementById('qbankEmpty');
+      if (emptyMsg) emptyMsg.style.display = 'block';
     }
 
     // PDF viewer
@@ -1882,7 +2073,7 @@
     }
 
     function renderPage() {
-      explanationBox.innerHTML = '';
+      explanationBox.style.display = 'none';
       if (!usePdfJs) {
         pdfCard.innerHTML = pdfPages[currentPage].map((p, i) => `<p data-idx="${i}">${p}</p>`).join('');
         pageCounter.textContent = `Page ${currentPage + 1} / ${pdfPages.length}`;
@@ -2028,7 +2219,24 @@
     }
 
     async function explainText(text) {
-      explanationBox.innerHTML = smartExplanation(text);
+      const { title, body, mnemonic } = smartExplanation(text);
+      showExplanation(title, body, mnemonic);
+    }
+
+    function showExplanation(title, body, mnemonic) {
+      const box = document.getElementById('explanationBox');
+      const textEl = document.getElementById('explanationText');
+      const mnemonicEl = document.getElementById('explanationMnemonic');
+      if (!box || !textEl) return;
+      box.style.display = 'block';
+      textEl.innerHTML = `<strong>${escapeHtml(title)}</strong><br>${escapeHtml(body)}`;
+      if (mnemonic) {
+        mnemonicEl.style.display = 'block';
+        mnemonicEl.textContent = `Mnemonic: ${mnemonic}`;
+      } else {
+        mnemonicEl.style.display = 'none';
+      }
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function smartExplanation(text) {
@@ -2037,33 +2245,31 @@
       for (const ch of HANDS_ON_ML_DATA.chapters) {
         for (const card of ch.flashcards || []) {
           if ((card.question + ' ' + card.answer).toLowerCase().includes(q) || q.includes(card.question.toLowerCase().slice(0, 20))) {
-            return renderExplanation(card.question, card.answer, card.keywords);
+            return { title: card.question, body: card.answer, mnemonic: makeMnemonic(card.answer) };
           }
         }
       }
       // Search formulas
       for (const f of HANDS_ON_ML_DATA.formulas || []) {
         if (f.context.toLowerCase().includes(q) || q.includes(f.formula.toLowerCase())) {
-          return renderExplanation(f.formula, f.context, []);
+          return { title: f.formula, body: f.context, mnemonic: '' };
         }
       }
       // Search mnemonics
       for (const m of HANDS_ON_ML_DATA.mnemonics || []) {
         if (m.concept.toLowerCase().includes(q) || q.includes(m.concept.toLowerCase().slice(0, 20))) {
-          return renderExplanation(m.concept, m.mnemonic, []);
+          return { title: m.concept, body: m.mnemonic, mnemonic: '' };
         }
       }
       // Generic explanation
-      return renderExplanation('Selected text', escapeHtml(text), ['Try the Flashcards tab for more practice.']);
+      return { title: 'Selected text', body: text, mnemonic: makeMnemonic(text) };
     }
 
-    function renderExplanation(title, body, keywords) {
-      const kw = Array.isArray(keywords) && keywords.length ? `<div style="margin-top:8px;font-size:11px;color:var(--primary);font-weight:600;">Keywords: ${keywords.map(escapeHtml).join(' · ')}</div>` : '';
-      return `<div class="inline-explanation">
-        <span class="label">Explanation</span>
-        <div class="exp-text"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(body)}</div>
-        ${kw}
-      </div>`;
+    function makeMnemonic(text) {
+      const words = text.replace(/[^a-zA-Z ]/g, '').split(/\s+/).filter(w => w.length > 2);
+      if (words.length < 3) return '';
+      const firstLetters = words.slice(0, 6).map(w => w[0].toUpperCase()).join('');
+      return `"${firstLetters}" = ${words.slice(0, 6).map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}.`;
     }
 
     function bindParagraphClicks() {
@@ -2096,6 +2302,171 @@
       reader.readAsArrayBuffer(file);
     });
 
+    function sharePage() {
+      if (navigator.share) {
+        navigator.share({ title: 'Argus FlipLearn', url: window.location.href }).catch(() => {});
+      } else {
+        navigator.clipboard?.writeText(window.location.href).then(() => alert('Link copied to clipboard'));
+      }
+    }
+
+    function toggleFullscreen() {
+      const el = document.getElementById('fliplearn');
+      if (!document.fullscreenElement) {
+        el.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.();
+      }
+    }
+
+    function fillAskInput(text) {
+      const input = document.getElementById('askInput');
+      if (input) input.value = text;
+      input?.focus();
+    }
+
+    function sendAsk() {
+      const input = document.getElementById('askInput');
+      const text = input?.value.trim();
+      if (!text) return;
+      alert('Ask feature: ' + text + '\n\n(Gemini integration would respond here.)');
+      input.value = '';
+    }
+
+    function wrapSelection(textareaId, before, after) {
+      const ta = document.getElementById(textareaId);
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const text = ta.value;
+      const selected = text.slice(start, end);
+      ta.value = text.slice(0, start) + before + selected + after + text.slice(end);
+      ta.selectionStart = start + before.length;
+      ta.selectionEnd = end + before.length;
+      ta.focus();
+      updateAnswerCount();
+    }
+
+    function insertPrefix(textareaId, prefix) {
+      const ta = document.getElementById(textareaId);
+      if (!ta) return;
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const text = ta.value;
+      const before = text.slice(0, start);
+      const selected = text.slice(start, end);
+      const lines = selected.split('\n');
+      const newSelected = lines.map(line => prefix + line).join('\n');
+      ta.value = before + newSelected + text.slice(end);
+      ta.selectionStart = start;
+      ta.selectionEnd = start + newSelected.length;
+      ta.focus();
+      updateAnswerCount();
+    }
+
+    function updateAnswerCount() {
+      const ta = document.getElementById('answerArea');
+      const count = document.getElementById('answerCount');
+      if (ta && count) count.textContent = `${ta.value.length} / 1000`;
+    }
+
+    document.getElementById('answerArea')?.addEventListener('input', updateAnswerCount);
+
+    // Gemini integration
+    function getGeminiKey() {
+      return document.getElementById('geminiKey')?.value.trim() || localStorage.getItem('argus_gemini_key') || '';
+    }
+
+    document.getElementById('geminiKey')?.addEventListener('change', e => {
+      if (e.target.value.trim()) localStorage.setItem('argus_gemini_key', e.target.value.trim());
+    });
+
+    async function callGemini(prompt, pdfText) {
+      const key = getGeminiKey();
+      if (!key) throw new Error('No Gemini API key provided.');
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
+      const body = {
+        contents: [{ parts: [{ text: `${prompt}\n\nPDF text:\n${pdfText || 'No PDF text available.'}` }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 }
+      };
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error(`Gemini request failed: ${res.status}`);
+      const data = await res.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    }
+
+    async function generateForChapter() {
+      const pdfText = window.pdfText || '';
+      const key = getGeminiKey();
+      if (!key) {
+        if (confirm('No Gemini API key set. Using static data as fallback. Add an API key?')) {
+          document.getElementById('geminiKey')?.focus();
+        }
+        switchTab('aiNotes');
+        return;
+      }
+      const btn = document.querySelector('.fl-panel-header .btn-primary');
+      const original = btn?.textContent;
+      if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+      try {
+        const [notes, flashcardsText, keyPointsText, flowchartText, diagramsText] = await Promise.all([
+          callGemini('Summarize the following chapter in 3-5 paragraphs suitable for student notes. Return plain text.', pdfText).catch(() => ''),
+          callGemini('Create flashcards for the following chapter. Return a JSON array of objects with "title" (short front) and "content" (back explanation).', pdfText).catch(() => ''),
+          callGemini('Extract 6-10 key points from the following chapter as a bullet list. Return one point per line.', pdfText).catch(() => ''),
+          callGemini('Create a mind map / flowchart outline for the following chapter. Return JSON with root name and branches array of {name, children[]}.', pdfText).catch(() => ''),
+          callGemini('Extract important formulas, equations, or diagrams from the following chapter. Return JSON array of {formula, context}.', pdfText).catch(() => '')
+        ]);
+        if (notes) window.aiData.aiNotes = notes;
+        window.aiData.flashcards = parseFlashcards(flashcardsText);
+        window.aiData.keyPoints = parseKeyPoints(keyPointsText);
+        window.aiData.flowchart = parseFlowchart(flowchartText);
+        window.aiData.diagrams = parseDiagrams(diagramsText);
+        switchTab('aiNotes');
+      } catch (err) {
+        alert('Gemini generation failed: ' + err.message);
+      } finally {
+        if (btn) { btn.textContent = original || 'Generate for this chapter'; btn.disabled = false; }
+      }
+    }
+
+    function parseJsonBlock(text) {
+      if (!text) return null;
+      const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const clean = match ? match[1].trim() : text.trim();
+      try { return JSON.parse(clean); } catch { return null; }
+    }
+
+    function parseFlashcards(text) {
+      const parsed = parseJsonBlock(text);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed.map(c => ({ title: String(c.title || c.question || ''), content: String(c.content || c.answer || '') })).filter(c => c.title && c.content);
+      }
+      return HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer })));
+    }
+
+    function parseKeyPoints(text) {
+      if (!text) return HANDS_ON_ML_DATA.mnemonics.map(m => `${m.concept}: ${m.mnemonic}`);
+      return text.split('\n').map(l => l.replace(/^[-*•\d.\s]+/, '').trim()).filter(Boolean);
+    }
+
+    function parseFlowchart(text) {
+      const parsed = parseJsonBlock(text);
+      if (parsed && parsed.root && Array.isArray(parsed.branches)) return parsed;
+      return HANDS_ON_ML_DATA.mindmap;
+    }
+
+    function parseDiagrams(text) {
+      const parsed = parseJsonBlock(text);
+      if (Array.isArray(parsed) && parsed.length) {
+        return parsed.map(d => ({ formula: String(d.formula || d.name || d.title || ''), context: String(d.context || d.description || '') })).filter(d => d.formula);
+      }
+      return HANDS_ON_ML_DATA.formulas;
+    }
+
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.textContent = text;
@@ -2108,7 +2479,7 @@
     }
 
     // Init
-    renderStaticTab('summary');
+    renderToolTab('aiNotes');
     renderQBankChapters();
     initPageFromHash();
     window.addEventListener('hashchange', () => initPageFromHash());
