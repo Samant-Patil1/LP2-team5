@@ -576,6 +576,74 @@
     }
     .flashcard-dot.active { background: var(--primary); }
 
+    /* Expanded flashcard modal */
+    .fc-modal-overlay {
+      position: fixed; inset: 0; background: rgba(20, 20, 30, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; padding: 20px; opacity: 0; pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .fc-modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .fc-modal {
+      width: min(640px, 100%); max-height: 90vh; background: var(--surface);
+      border-radius: 18px; box-shadow: 0 25px 80px rgba(0,0,0,0.18);
+      display: flex; flex-direction: column; overflow: hidden;
+      transform: scale(0.92); transition: transform 0.25s ease;
+    }
+    .fc-modal-overlay.open .fc-modal { transform: scale(1); }
+    .fc-modal-header {
+      background: var(--primary); color: white;
+      padding: 18px 22px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .fc-modal-title { font-weight: 700; font-size: 16px; line-height: 1.4; }
+    .fc-modal-counter { font-size: 12px; font-weight: 600; opacity: 0.9; margin-left: 16px; }
+    .fc-modal-close {
+      width: 32px; height: 32px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15);
+      color: white; cursor: pointer; display: grid; place-items: center;
+    }
+    .fc-modal-body { padding: 24px; overflow: auto; flex: 1; }
+    .fc-modal-question {
+      font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.5; margin-bottom: 18px;
+    }
+    .fc-modal-input-wrap { margin-bottom: 16px; }
+    .fc-modal-input {
+      width: 100%; min-height: 120px; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 14px; font-size: 14px; line-height: 1.6; font-family: inherit; resize: vertical;
+      outline: none;
+    }
+    .fc-modal-input:focus { border-color: var(--primary); }
+    .fc-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .fc-modal-btn {
+      padding: 10px 18px; border-radius: 999px; border: none; font-weight: 600; font-size: 13px; cursor: pointer;
+    }
+    .fc-modal-btn.primary { background: var(--primary); color: white; }
+    .fc-modal-btn.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+
+    .fc-modal-back {
+      display: none;
+    }
+    .fc-modal.flipped .fc-modal-front { display: none; }
+    .fc-modal.flipped .fc-modal-back { display: block; }
+
+    .fc-modal-answer-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted); margin-bottom: 6px;
+    }
+    .fc-modal-user-answer {
+      background: var(--primary-soft); border-radius: var(--radius); padding: 12px 14px;
+      font-size: 14px; color: var(--text); margin-bottom: 16px; line-height: 1.5;
+    }
+    .fc-modal-correct {
+      background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius);
+      padding: 14px; font-size: 14px; color: var(--text); line-height: 1.6; margin-bottom: 16px;
+    }
+    .fc-modal-keywords { display: flex; flex-wrap: wrap; gap: 6px; }
+    .fc-keyword {
+      padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+    }
+    .fc-keyword.missed { background: #fee2e2; color: #991b1b; }
+    .fc-keyword.hit { background: #d1fae5; color: #065f46; }
+
     /* PYQ / Ask section */
     .pyq-section { padding: 14px; border-top: 1px solid var(--border); }
     .pyq-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -1732,7 +1800,7 @@
     // AI Study Tools tabs
     window.aiData = {
       aiNotes: HANDS_ON_ML_DATA.summary,
-      flashcards: HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer }))),
+      flashcards: HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer, keywords: fc.keywords || [] }))),
       keyPoints: HANDS_ON_ML_DATA.mnemonics.map(m => `${m.concept}: ${m.mnemonic}`),
       flowchart: HANDS_ON_ML_DATA.mindmap,
       diagrams: HANDS_ON_ML_DATA.formulas
@@ -1880,19 +1948,16 @@
         const card = cards[idx + i];
         const isTop = i === 0;
         html += `
-          <div class="flashcard-card ${session.revealed ? 'revealed' : ''}" id="fcCard_${containerId}_${i}"
+          <div class="flashcard-card" id="fcCard_${containerId}_${i}"
                style="top:${offset}px;left:${offset}px;transform:scale(${scale});z-index:${zIndex};"
-               onclick="${isTop ? `toggleReveal('${containerId}')` : ''}">
+               onclick="${isTop ? `openFcModal('${containerId}')` : ''}">
             <div class="flashcard-card-header">
               <div class="flashcard-card-title">${escapeHtml((isTop ? current.title : card.title || '').toString().slice(0, 40))}${(isTop && current.title.length > 40) ? '…' : ''}</div>
               <div class="flashcard-card-counter">${idx + 1} / ${total}</div>
             </div>
-            <div class="flashcard-card-body" id="fcBody_${containerId}_${i}" ${session.revealed && isTop ? '' : 'style="display:none;"'}>
-              ${escapeHtml(card.content || '')}
-            </div>
-            ${isTop && !session.revealed ? `
-              <div class="flashcard-reveal-bar" onclick="event.stopPropagation();toggleReveal('${containerId}')">
-                Click to reveal answer
+            ${isTop ? `
+              <div class="flashcard-reveal-bar" onclick="event.stopPropagation();openFcModal('${containerId}')">
+                Click to answer
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
               </div>
             ` : ''}
@@ -1932,10 +1997,65 @@
     }
 
     function toggleReveal(containerId) {
+      openFcModal(containerId);
+    }
+
+    let fcModalSessionId = null;
+
+    function openFcModal(containerId) {
       const session = getSession(containerId);
       if (!session) return;
-      session.revealed = !session.revealed;
-      drawFlashcardStack(containerId);
+      fcModalSessionId = containerId;
+      const card = session.cards[session.index];
+      document.getElementById('fcModalTitle').textContent = card.title || 'Flashcard';
+      document.getElementById('fcModalCounter').textContent = `${session.index + 1} / ${session.cards.length}`;
+      document.getElementById('fcModalQuestion').textContent = card.title || 'Question';
+      document.getElementById('fcModalInput').value = '';
+      document.getElementById('fcModalUserAnswer').textContent = '';
+      document.getElementById('fcModalCorrect').textContent = '';
+      document.getElementById('fcModalKeywords').innerHTML = '';
+      document.getElementById('fcModal').classList.remove('flipped');
+      document.getElementById('fcModalOverlay').classList.add('open');
+      setTimeout(() => document.getElementById('fcModalInput').focus(), 50);
+    }
+
+    function closeFcModal(e) {
+      if (e && e.target !== e.currentTarget) return;
+      document.getElementById('fcModalOverlay').classList.remove('open');
+      document.getElementById('fcModal').classList.remove('flipped');
+      fcModalSessionId = null;
+    }
+
+    function submitFcAnswer() {
+      const session = getSession(fcModalSessionId);
+      if (!session) return;
+      const card = session.cards[session.index];
+      const userAnswer = document.getElementById('fcModalInput').value.trim() || '(no answer typed)';
+      document.getElementById('fcModalUserAnswer').textContent = userAnswer;
+      document.getElementById('fcModalCorrect').textContent = card.content || 'No answer provided.';
+      document.getElementById('fcModalKeywords').innerHTML = renderFcKeywords(card.keywords || [], userAnswer);
+      document.getElementById('fcModal').classList.add('flipped');
+    }
+
+    function nextFcModalCard() {
+      const session = getSession(fcModalSessionId);
+      if (!session) return;
+      if (session.index < session.cards.length - 1) {
+        session.index++;
+        drawFlashcardStack(fcModalSessionId);
+        openFcModal(fcModalSessionId);
+      } else {
+        closeFcModal();
+      }
+    }
+
+    function renderFcKeywords(keywords, userAnswer) {
+      if (!keywords.length) return '<span class="fc-keyword hit">No keywords defined</span>';
+      const userLower = userAnswer.toLowerCase();
+      return keywords.map(kw => {
+        const hit = userLower.includes(kw.toLowerCase());
+        return `<span class="fc-keyword ${hit ? 'hit' : 'missed'}">${hit ? '✓' : '✗'} ${escapeHtml(kw)}</span>`;
+      }).join('');
     }
 
     function nextFlashcard(containerId) {
@@ -1943,7 +2063,6 @@
       if (!session) return;
       if (session.index < session.cards.length - 1) {
         session.index++;
-        session.revealed = false;
         drawFlashcardStack(containerId);
       }
     }
@@ -1953,7 +2072,6 @@
       if (!session) return;
       if (session.index > 0) {
         session.index--;
-        session.revealed = false;
         drawFlashcardStack(containerId);
       }
     }
@@ -1988,7 +2106,7 @@
         alert('Select chapters to start revising');
         return;
       }
-      const cards = HANDS_ON_ML_DATA.chapters.filter(ch => selected.includes(ch.id)).flatMap(ch => ch.flashcards || []);
+      const cards = HANDS_ON_ML_DATA.chapters.filter(ch => selected.includes(ch.id)).flatMap(ch => (ch.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer, keywords: fc.keywords || [] })));
       if (!cards.length) { alert('Selected chapters have no flashcards.'); return; }
       document.getElementById('qbankSession').style.display = 'block';
       const emptyMsg = document.getElementById('qbankEmpty');
@@ -2415,7 +2533,7 @@
       try {
         const [notes, flashcardsText, keyPointsText, flowchartText, diagramsText] = await Promise.all([
           callGemini('Summarize the following chapter in 3-5 paragraphs suitable for student notes. Return plain text.', pdfText).catch(() => ''),
-          callGemini('Create flashcards for the following chapter. Return a JSON array of objects with "title" (short front) and "content" (back explanation).', pdfText).catch(() => ''),
+          callGemini('Create flashcards for the following chapter. Return a JSON array of objects with "title" (short question front), "content" (back explanation), and "keywords" (array of 3-5 key terms that should appear in a good answer).', pdfText).catch(() => ''),
           callGemini('Extract 6-10 key points from the following chapter as a bullet list. Return one point per line.', pdfText).catch(() => ''),
           callGemini('Create a mind map / flowchart outline for the following chapter. Return JSON with root name and branches array of {name, children[]}.', pdfText).catch(() => ''),
           callGemini('Extract important formulas, equations, or diagrams from the following chapter. Return JSON array of {formula, context}.', pdfText).catch(() => '')
@@ -2443,9 +2561,13 @@
     function parseFlashcards(text) {
       const parsed = parseJsonBlock(text);
       if (Array.isArray(parsed) && parsed.length) {
-        return parsed.map(c => ({ title: String(c.title || c.question || ''), content: String(c.content || c.answer || '') })).filter(c => c.title && c.content);
+        return parsed.map(c => ({
+          title: String(c.title || c.question || ''),
+          content: String(c.content || c.answer || ''),
+          keywords: Array.isArray(c.keywords) ? c.keywords.map(String) : []
+        })).filter(c => c.title && c.content);
       }
-      return HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer })));
+      return HANDS_ON_ML_DATA.chapters.flatMap(c => (c.flashcards || []).map(fc => ({ title: fc.question, content: fc.answer, keywords: fc.keywords || [] })));
     }
 
     function parseKeyPoints(text) {
@@ -2485,5 +2607,42 @@
     window.addEventListener('hashchange', () => initPageFromHash());
     renderPage();
   </script>
+
+  <!-- Expanded flashcard modal -->
+  <div class="fc-modal-overlay" id="fcModalOverlay" onclick="closeFcModal(event)">
+    <div class="fc-modal" id="fcModal" onclick="event.stopPropagation()">
+      <div class="fc-modal-header">
+        <div style="display:flex;align-items:center;flex:1;min-width:0;">
+          <div class="fc-modal-title" id="fcModalTitle">Question</div>
+          <div class="fc-modal-counter" id="fcModalCounter">1 / 10</div>
+        </div>
+        <button class="fc-modal-close" onclick="closeFcModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="fc-modal-body">
+        <div class="fc-modal-front" id="fcModalFront">
+          <div class="fc-modal-question" id="fcModalQuestion">Question text</div>
+          <div class="fc-modal-input-wrap">
+            <textarea class="fc-modal-input" id="fcModalInput" placeholder="Type your answer here..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();submitFcAnswer();}"></textarea>
+          </div>
+          <div class="fc-modal-actions">
+            <button class="fc-modal-btn ghost" onclick="closeFcModal()">Close</button>
+            <button class="fc-modal-btn primary" onclick="submitFcAnswer()">Press Enter to flip</button>
+          </div>
+        </div>
+        <div class="fc-modal-back" id="fcModalBack">
+          <div class="fc-modal-answer-label">Your answer</div>
+          <div class="fc-modal-user-answer" id="fcModalUserAnswer"></div>
+          <div class="fc-modal-answer-label">Correct answer</div>
+          <div class="fc-modal-correct" id="fcModalCorrect"></div>
+          <div class="fc-modal-answer-label">Keywords</div>
+          <div class="fc-modal-keywords" id="fcModalKeywords"></div>
+          <div class="fc-modal-actions" style="margin-top:20px;">
+            <button class="fc-modal-btn ghost" onclick="closeFcModal()">Close</button>
+            <button class="fc-modal-btn primary" onclick="nextFcModalCard()">Next card →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
