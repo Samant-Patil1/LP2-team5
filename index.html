@@ -20,9 +20,9 @@
       --text-light: #8b95a8;
       --border: #e6ebf0;
       --border-strong: #d0d7e0;
-      --primary: #7c3aed;
-      --primary-light: #ede9fe;
-      --primary-soft: #f5f3ff;
+      --primary: #3684cc;
+      --primary-light: #e8f4fd;
+      --primary-soft: #f0f9ff;
       --blue: #3684cc;
       --blue-light: #e8f4fd;
       --orange: #cc7f0b;
@@ -37,6 +37,27 @@
       --shadow: 0 4px 16px rgba(53,64,96,0.08);
       --sidebar-width: 248px;
       --topbar-height: 72px;
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --text: #e2e8f0;
+      --text-muted: rgba(226,232,240,0.6);
+      --text-light: #94a3b8;
+      --border: #334155;
+      --border-strong: #475569;
+      --primary: #3684cc;
+      --primary-light: rgba(54,132,204,0.18);
+      --primary-soft: rgba(54,132,204,0.12);
+      --blue: #3684cc;
+      --blue-light: rgba(54,132,204,0.18);
+      --orange: #f59e0b;
+      --orange-light: rgba(245,158,11,0.18);
+      --green: #4ade80;
+      --green-light: rgba(74,222,128,0.18);
+      --red: #f87171;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow: 0 4px 16px rgba(0,0,0,0.35);
     }
 
     * { box-sizing: border-box; }
@@ -88,7 +109,7 @@
       margin-bottom: 18px;
       padding-left: 6px;
     }
-    .sidebar-logo svg { height: 36px; width: auto; }
+    .sidebar-logo svg, .sidebar-logo img { height: 36px; width: auto; }
     .nav { flex: 1; overflow-y: auto; }
     .nav-item {
       display: flex; align-items: center; gap: 12px;
@@ -108,6 +129,32 @@
 
     /* Topbar */
     .topbar-left, .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-search { flex: 1; max-width: 420px; margin: 0 20px; }
+    .search-wrapper { position: relative; }
+    .search-wrapper input {
+      width: 100%; height: 40px; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text); padding: 0 16px 0 40px; font-size: 13px;
+      outline: none;
+    }
+    .search-wrapper input:focus { border-color: var(--primary); background: var(--surface); }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+    .search-dropdown {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); max-height: 320px; overflow-y: auto; display: none; z-index: 100;
+    }
+    .search-dropdown.open { display: block; }
+    .search-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border);
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: var(--bg); }
+    .search-item-text { font-size: 13px; color: var(--text); }
+    .search-item-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+      background: #e0f2fe; color: #0369a1; padding: 3px 7px; border-radius: 999px; white-space: nowrap;
+    }
     .topbar-greeting {
       display: flex; align-items: center; gap: 12px;
     }
@@ -226,11 +273,10 @@
     }
     .subject-header { display: flex; align-items: flex-start; gap: 12px; }
     .subject-thumb {
-      width: 52px; height: 52px; border-radius: 12px; background: #fef2f2;
-      display: grid; place-items: center; font-size: 22px; flex-shrink: 0;
+      width: 52px; height: 52px; border-radius: 12px; background: #f8fafc;
+      display: grid; place-items: center; flex-shrink: 0; padding: 8px;
     }
-    .subject-thumb.bio { background: #f0fdf4; }
-    .subject-thumb.geo { background: #fffbeb; }
+    .subject-thumb img { width: 100%; height: 100%; object-fit: contain; }
     .subject-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
     .subject-teacher { font-size: 12px; color: var(--text-muted); }
     .topic-list { display: flex; flex-direction: column; gap: 0; position: relative; padding-left: 6px; }
@@ -343,9 +389,10 @@
     }
     .task-item:last-child { border-bottom: none; }
     .task-thumb {
-      width: 44px; height: 44px; border-radius: 10px; background: #fef2f2;
-      display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+      width: 44px; height: 44px; border-radius: 10px; background: #f8fafc;
+      display: grid; place-items: center; flex-shrink: 0; padding: 6px;
     }
+    .task-thumb img { width: 100%; height: 100%; object-fit: contain; }
     .task-thumb.bio { background: #f0fdf4; }
     .task-info { flex: 1; min-width: 0; }
     .task-topic { font-weight: 700; font-size: 13px; margin-bottom: 3px; }
@@ -511,8 +558,14 @@
       content: ''; position: absolute; left: 0; top: 7px;
       width: 7px; height: 7px; border-radius: 50%; background: var(--primary);
     }
-    .mindmap-wrap { display: flex; justify-content: center; align-items: center; min-height: 240px; overflow: auto; background: var(--primary-soft); border-radius: var(--radius); }
-    .mindmap-svg { min-width: 600px; min-height: 460px; }
+    .mindmap-wrap { position: relative; min-height: 280px; background: var(--primary-soft); border-radius: var(--radius); overflow: hidden; }
+    .mindmap-viewport { width: 100%; height: 100%; min-height: 280px; overflow: auto; cursor: grab; }
+    .mindmap-viewport:active { cursor: grabbing; }
+    .mindmap-content { display: inline-block; transform-origin: 0 0; transition: transform 0.15s ease; }
+    .mindmap-svg { min-width: 760px; min-height: 520px; display: block; }
+    .mindmap-controls { position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 6px; }
+    .mindmap-controls button { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; width: 28px; height: 28px; font-size: 16px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); }
+    .mindmap-controls button:hover { background: var(--primary-soft); color: var(--primary); }
     .mindmap-link { stroke: #c4b5fd; stroke-width: 2; fill: none; }
     .mindmap-node { cursor: default; transition: .2s; }
     .mindmap-node:hover circle { stroke: var(--primary); stroke-width: 3; }
@@ -535,7 +588,7 @@
     .flashcard-section-header { margin-bottom: 12px; }
     .flashcard-section-title { font-size: 15px; font-weight: 700; color: var(--text); }
     .flashcard-section-subtitle { font-size: 12px; color: var(--text-muted); }
-    .flashcard-stack { position: relative; height: 260px; perspective: 1000px; }
+    .flashcard-stack { position: relative; height: 260px; max-width: 320px; margin: 0 auto; perspective: 1000px; }
     .flashcard-card {
       position: absolute; width: 100%; height: 100%;
       transform-style: preserve-3d; transition: transform 0.4s, opacity 0.3s;
@@ -744,16 +797,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <svg viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(6, 8)">
-            <ellipse cx="12" cy="18" rx="8" ry="8" fill="#1e40af"/>
-            <ellipse cx="24" cy="10" rx="6" ry="6" fill="#3b82f6"/>
-            <ellipse cx="28" cy="24" rx="7" ry="7" fill="#2563eb"/>
-            <ellipse cx="10" cy="8" rx="5" ry="5" fill="#60a5fa"/>
-            <ellipse cx="6" cy="28" rx="5" ry="5" fill="#1d4ed8"/>
-          </g>
-          <text x="48" y="30" font-family="Inter, sans-serif" font-size="17" font-weight="800" fill="#1e3a8a">EuroSchool</text>
-        </svg>
+        <img src="assets/euroschool-logo.png" alt="EuroSchool" class="logo-img" style="height:34px;width:auto;">
       </div>
       <nav class="nav">
         <div class="nav-item active" data-page="dashboard">
@@ -779,10 +823,6 @@
           <span>Message Center</span>
         </div>
         <div class="nav-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          <span>Class Notes</span>
-        </div>
-        <div class="nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
           <span>Curriculum</span>
         </div>
@@ -798,10 +838,6 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
           <span>Performance</span>
           <svg class="nav-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </div>
-        <div class="nav-item">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <span>Learner's Profile</span>
         </div>
         <div class="nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -832,6 +868,13 @@
             </span>
           </div>
         </div>
+        <div class="topbar-search">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="globalSearch" placeholder="Search worksheets, homework, calendar..." autocomplete="off">
+            <div class="search-dropdown" id="searchDropdown"></div>
+          </div>
+        </div>
         <div class="topbar-right">
           <button class="topbar-btn secondary" onclick="goToFlipLearn()">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
@@ -845,6 +888,9 @@
           <button class="topbar-btn secondary" onclick="alert('Aspire Lens is coming soon')">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="M4.93 4.93l1.41 1.41"></path><path d="M17.66 17.66l1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="M6.34 17.66l-1.41 1.41"></path><path d="M19.07 4.93l-1.41 1.41"></path></svg>
             Aspire Lens
+          </button>
+          <button class="topbar-btn secondary" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+            <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
           </button>
           <button class="notif-btn" aria-label="Notifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
@@ -911,7 +957,7 @@
                   <!-- Chemistry -->
                   <div class="subject-card">
                     <div class="subject-header">
-                      <div class="subject-thumb">⚗️</div>
+                      <div class="subject-thumb"><img src="assets/subjects/Chemistry.svg" alt="Chemistry"></div>
                       <div>
                         <div class="subject-name">Chemistry</div>
                         <div class="subject-teacher">By Avinash Maruti Kadrolkar</div>
@@ -957,7 +1003,7 @@
                   <!-- Biology -->
                   <div class="subject-card">
                     <div class="subject-header">
-                      <div class="subject-thumb bio">🧬</div>
+                      <div class="subject-thumb"><img src="assets/subjects/Biology.svg" alt="Biology"></div>
                       <div>
                         <div class="subject-name">Biology</div>
                         <div class="subject-teacher">By Rakhi Joshi</div>
@@ -1003,7 +1049,7 @@
                   <!-- Geography -->
                   <div class="subject-card">
                     <div class="subject-header">
-                      <div class="subject-thumb geo">🌍</div>
+                      <div class="subject-thumb"><img src="assets/subjects/Geography.svg" alt="Geography"></div>
                       <div>
                         <div class="subject-name">Geography</div>
                         <div class="subject-teacher">By Chandrima Roy</div>
@@ -1064,7 +1110,7 @@
                 <div class="podcast-row">
                   <div class="podcast-card">
                     <div class="podcast-top">
-                      <div class="podcast-thumb">🧪</div>
+                      <div class="podcast-thumb"><img src="assets/subjects/Chemistry.svg" alt="Chemistry" style="width:28px;height:28px;object-fit:contain;"></div>
                       <div>
                         <span class="podcast-tag">Science</span>
                         <div class="podcast-episode">4. Chemical reactions-displacement reactions, redox reaction</div>
@@ -1084,7 +1130,7 @@
                   </div>
                   <div class="podcast-card">
                     <div class="podcast-top">
-                      <div class="podcast-thumb">⚛️</div>
+                      <div class="podcast-thumb"><img src="assets/subjects/Physics.svg" alt="Physics" style="width:28px;height:28px;object-fit:contain;"></div>
                       <div>
                         <span class="podcast-tag">Science</span>
                         <div class="podcast-episode">3. Chemical reactions-combination reactions</div>
@@ -1104,7 +1150,7 @@
                   </div>
                   <div class="podcast-card">
                     <div class="podcast-top">
-                      <div class="podcast-thumb">🔥</div>
+                      <div class="podcast-thumb"><img src="assets/subjects/Chemistry.svg" alt="Chemistry" style="width:28px;height:28px;object-fit:contain;"></div>
                       <div>
                         <span class="podcast-tag">Science</span>
                         <div class="podcast-episode">2. Balancing chemical equations</div>
@@ -1155,7 +1201,7 @@
                 </div>
                 <div class="task-list">
                   <div class="task-item">
-                    <div class="task-thumb">⚗️</div>
+                    <div class="task-thumb"><img src="assets/subjects/Chemistry.svg" alt="Chemistry"></div>
                     <div class="task-info">
                       <div class="task-topic">Mole concept and Stoichiometry</div>
                       <div class="task-type">Worksheet</div>
@@ -1169,7 +1215,7 @@
                     <span class="task-status pending">Pending</span>
                   </div>
                   <div class="task-item">
-                    <div class="task-thumb">⚗️</div>
+                    <div class="task-thumb"><img src="assets/subjects/Chemistry.svg" alt="Chemistry"></div>
                     <div class="task-info">
                       <div class="task-topic">Mole concept and Stoichiometry</div>
                       <div class="task-type">Worksheet</div>
@@ -1183,7 +1229,7 @@
                     <span class="task-status pending">Pending</span>
                   </div>
                   <div class="task-item">
-                    <div class="task-thumb bio">🧬</div>
+                    <div class="task-thumb"><img src="assets/subjects/Biology.svg" alt="Biology"></div>
                     <div class="task-info">
                       <div class="task-topic">Chemical Co-ordination in Plants</div>
                       <div class="task-type">Worksheet</div>
@@ -1197,7 +1243,7 @@
                     <span class="task-status pending">Pending</span>
                   </div>
                   <div class="task-item">
-                    <div class="task-thumb bio">🧬</div>
+                    <div class="task-thumb"><img src="assets/subjects/Biology.svg" alt="Biology"></div>
                     <div class="task-info">
                       <div class="task-topic">The Excretory System</div>
                       <div class="task-type">Worksheet</div>
@@ -1233,10 +1279,10 @@
                     </div>
                     <div class="message-body">Dear students<br>Please take a print out of the worksheet and solve</div>
                     <div class="message-actions">
-                      <span>😊 0</span>
-                      <span>👍 0</span>
-                      <span>💬 0</span>
-                      <span>📎 1</span>
+                      <span>Smile 0</span>
+                      <span>Like 0</span>
+                      <span>Reply 0</span>
+                      <span>Attach 1</span>
                     </div>
                   </div>
                 </div>
@@ -1256,7 +1302,9 @@
                   </div>
                 </div>
                 <div class="spacewalk-body">
-                  <div class="spacewalk-astronaut">🧑‍🚀</div>
+                  <div class="spacewalk-astronaut">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M18 21v-2a4 4 0 0 0-4-4H10a4 4 0 0 0-4 4v2"></path><path d="M12 12v4"></path><path d="M8 16l-2 3"></path><path d="M16 16l2 3"></path></svg>
+                  </div>
                   <div class="spacewalk-text">Practice resources to begin your journey.</div>
                 </div>
               </div>
@@ -1448,7 +1496,7 @@
                       <button class="format-btn" title="Bold" onclick="wrapSelection('answerArea','**','**')">B</button>
                       <button class="format-btn" title="Italic" onclick="wrapSelection('answerArea','*','*')">I</button>
                       <button class="format-btn" title="Underline" onclick="wrapSelection('answerArea','__','__')">U</button>
-                      <button class="format-btn" title="Bullet list" onclick="insertPrefix('answerArea','- ')">☰</button>
+                      <button class="format-btn" title="Bullet list" onclick="insertPrefix('answerArea','- ')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
                       <button class="format-btn" title="Numbered list" onclick="insertPrefix('answerArea','1. ')">1.</button>
                     </div>
                     <span class="answer-count" id="answerCount">0 / 1000</span>
@@ -1890,7 +1938,70 @@
         <text x="${cx}" y="${cy}">${wrapText(escapeHtml(root), 14)}</text>
       </g>`;
       svg += `</svg>`;
-      return `<div class="mindmap-wrap">${svg}</div>`;
+      return `<div class="mindmap-wrap">
+        <div class="mindmap-controls">
+          <button type="button" onclick="mindmapZoom('in')" title="Zoom in">+</button>
+          <button type="button" onclick="mindmapZoom('out')" title="Zoom out">−</button>
+          <button type="button" onclick="mindmapReset()" title="Reset">⌂</button>
+        </div>
+        <div class="mindmap-viewport" id="mindmapViewport" onmousedown="mindmapPanStart(event)" onwheel="mindmapWheel(event)">
+          <div class="mindmap-content" id="mindmapContent">${svg}</div>
+        </div>
+      </div>`;
+    }
+
+    // Mindmap zoom / pan
+    window.mindmapState = { scale: 1, panning: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 };
+    function applyMindmapTransform() {
+      const content = document.getElementById('mindmapContent');
+      if (content) content.style.transform = `scale(${window.mindmapState.scale})`;
+    }
+    function mindmapZoom(dir) {
+      const s = window.mindmapState;
+      s.scale = dir === 'in' ? Math.min(s.scale + 0.2, 3) : Math.max(s.scale - 0.2, 0.5);
+      applyMindmapTransform();
+    }
+    function mindmapReset() {
+      window.mindmapState.scale = 1;
+      applyMindmapTransform();
+      const vp = document.getElementById('mindmapViewport');
+      if (vp) { vp.scrollLeft = 0; vp.scrollTop = 0; }
+    }
+    function mindmapWheel(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const s = window.mindmapState;
+      const delta = e.deltaY > 0 ? -0.15 : 0.15;
+      s.scale = Math.min(Math.max(s.scale + delta, 0.5), 3);
+      applyMindmapTransform();
+    }
+    function mindmapPanStart(e) {
+      if (e.target.closest('.mindmap-controls')) return;
+      const vp = document.getElementById('mindmapViewport');
+      if (!vp) return;
+      const s = window.mindmapState;
+      s.panning = true;
+      s.startX = e.clientX;
+      s.startY = e.clientY;
+      s.scrollLeft = vp.scrollLeft;
+      s.scrollTop = vp.scrollTop;
+      vp.style.cursor = 'grabbing';
+      document.addEventListener('mousemove', mindmapPanMove);
+      document.addEventListener('mouseup', mindmapPanEnd, { once: true });
+    }
+    function mindmapPanMove(e) {
+      const s = window.mindmapState;
+      if (!s.panning) return;
+      const vp = document.getElementById('mindmapViewport');
+      if (!vp) return;
+      vp.scrollLeft = s.scrollLeft - (e.clientX - s.startX);
+      vp.scrollTop = s.scrollTop - (e.clientY - s.startY);
+    }
+    function mindmapPanEnd() {
+      window.mindmapState.panning = false;
+      const vp = document.getElementById('mindmapViewport');
+      if (vp) vp.style.cursor = 'grab';
+      document.removeEventListener('mousemove', mindmapPanMove);
     }
 
     function wrapText(text, maxChars) {
@@ -2052,7 +2163,7 @@
       const userLower = userAnswer.toLowerCase();
       return keywords.map(kw => {
         const hit = userLower.includes(kw.toLowerCase());
-        return `<span class="fc-keyword ${hit ? 'hit' : 'missed'}">${hit ? '✓' : '✗'} ${escapeHtml(kw)}</span>`;
+        return `<span class="fc-keyword ${hit ? 'hit' : 'missed'}">${hit ? 'Got:' : 'Missed:'} ${escapeHtml(kw)}</span>`;
       }).join('');
     }
 
@@ -2598,6 +2709,80 @@
       if (hash && document.getElementById(hash)) showPage(hash);
     }
 
+    // Theme toggle
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('argus_theme', theme);
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+    (function initTheme() {
+      const saved = localStorage.getItem('argus_theme');
+      if (saved) applyTheme(saved);
+    })();
+
+    // Global search
+    function buildSearchIndex() {
+      const idx = [];
+      // Sidebar navigation
+      const navMap = {
+        dashboard: 'Dashboard', fliplearn: 'FlipLearn', qbank: 'Q-Bank',
+        'home-extension': 'Home Extension', 'message-center': 'Message Center',
+        curriculum: 'Curriculum', courses: 'Courses', 'space-walk': 'Space Walk',
+        performance: 'Performance', calendar: 'Calendar', fees: 'Fees', 'help-support': 'Help & Support'
+      };
+      Object.entries(navMap).forEach(([page, label]) => {
+        idx.push({ text: label, badge: 'Navigation', action: () => showPage(page) });
+      });
+      // Dashboard features
+      idx.push({ text: 'FlipLearn - Upload PDF and study', badge: 'Dashboard', action: () => showPage('fliplearn') });
+      idx.push({ text: 'Q-Bank - Chapter flashcards', badge: 'Dashboard', action: () => showPage('qbank') });
+      idx.push({ text: 'Learning Journey', badge: 'Dashboard', action: () => showPage('dashboard') });
+      idx.push({ text: 'Tasks', badge: 'Dashboard', action: () => showPage('dashboard') });
+      idx.push({ text: 'Podcasts', badge: 'Dashboard', action: () => showPage('dashboard') });
+      // Study content
+      HANDS_ON_ML_DATA.chapters.forEach(ch => {
+        idx.push({ text: ch.title, badge: 'FlipLearn', action: () => { showPage('fliplearn'); renderToolTab('aiNotes'); } });
+        (ch.flashcards || []).forEach(fc => {
+          idx.push({ text: fc.question, badge: 'Flashcards', action: () => { showPage('fliplearn'); renderToolTab('flashcards'); } });
+        });
+      });
+      HANDS_ON_ML_DATA.formulas.forEach(f => {
+        idx.push({ text: f.formula, badge: 'Formulas', action: () => { showPage('fliplearn'); renderToolTab('diagrams'); } });
+      });
+      HANDS_ON_ML_DATA.mnemonics.forEach(m => {
+        idx.push({ text: m.concept, badge: 'Mnemonics', action: () => { showPage('fliplearn'); renderToolTab('keyPoints'); } });
+      });
+      return idx;
+    }
+
+    const searchIndex = buildSearchIndex();
+    const searchInput = document.getElementById('globalSearch');
+    const searchDropdown = document.getElementById('searchDropdown');
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const q = e.target.value.trim().toLowerCase();
+        if (!q) { searchDropdown.classList.remove('open'); searchDropdown.innerHTML = ''; return; }
+        const matches = searchIndex.filter(item => item.text.toLowerCase().includes(q)).slice(0, 8);
+        if (!matches.length) {
+          searchDropdown.innerHTML = '<div class="search-item"><span class="search-item-text">No results found</span></div>';
+        } else {
+          searchDropdown.innerHTML = matches.map(item => `
+            <div class="search-item" onclick="(${item.action.toString()})(); document.getElementById('globalSearch').value=''; document.getElementById('searchDropdown').classList.remove('open');">
+              <span class="search-item-text">${escapeHtml(item.text)}</span>
+              <span class="search-item-badge">${escapeHtml(item.badge)}</span>
+            </div>
+          `).join('');
+        }
+        searchDropdown.classList.add('open');
+      });
+      searchInput.addEventListener('blur', () => setTimeout(() => searchDropdown.classList.remove('open'), 200));
+      searchInput.addEventListener('focus', () => { if (searchInput.value.trim()) searchDropdown.classList.add('open'); });
+    }
+
     // Init
     renderToolTab('aiNotes');
     renderQBankChapters();
@@ -2614,7 +2799,7 @@
           <div class="fc-modal-title" id="fcModalTitle">Question</div>
           <div class="fc-modal-counter" id="fcModalCounter">1 / 10</div>
         </div>
-        <button class="fc-modal-close" onclick="closeFcModal()" aria-label="Close">✕</button>
+        <button class="fc-modal-close" onclick="closeFcModal()" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
       <div class="fc-modal-body">
         <div class="fc-modal-front" id="fcModalFront">

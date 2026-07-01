@@ -3,6 +3,9 @@
 *.png
 *.jpg
 *.jpeg
+!assets/*.png
+!assets/*.jpg
+!assets/*.jpeg
 index.html.bak
 snapshot.json
 test.pdf
