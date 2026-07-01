@@ -1467,14 +1467,12 @@
                   <div class="tab active" data-tab="aiNotes" onclick="switchTab('aiNotes')">AI Notes</div>
                   <div class="tab" data-tab="flashcards" onclick="switchTab('flashcards')">Flashcards</div>
                   <div class="tab" data-tab="keyPoints" onclick="switchTab('keyPoints')">Key Points <span class="tab-badge">New</span></div>
-                  <div class="tab" data-tab="flowchart" onclick="switchTab('flowchart')">Flowchart</div>
-                  <div class="tab" data-tab="diagrams" onclick="switchTab('diagrams')">Diagrams</div>
+                  <div class="tab" data-tab="mindmap" onclick="switchTab('mindmap')">Mindmap</div>
                 </div>
                 <div class="tool-content active" id="aiNotes"></div>
                 <div class="tool-content" id="flashcards"></div>
                 <div class="tool-content" id="keyPoints"></div>
-                <div class="tool-content" id="flowchart"></div>
-                <div class="tool-content" id="diagrams"></div>
+                <div class="tool-content" id="mindmap"></div>
               </div>
 
               <!-- PYQ / Ask section -->
@@ -1869,13 +1867,16 @@
         renderFlashcardStack('flashcards', window.aiData.flashcards);
       } else if (tab === 'keyPoints') {
         container.innerHTML = renderKeyPoints(window.aiData.keyPoints);
-      } else if (tab === 'flowchart') {
-        const mm = window.aiData.flowchart;
+      } else if (tab === 'mindmap') {
+        const mm = JSON.parse(JSON.stringify(window.aiData.flowchart || {}));
+        mm.branches = mm.branches || [];
+        const formulaItems = (window.aiData.diagrams || []).map(d => ({ text: d.formula, title: d.context }));
+        if (formulaItems.length && !mm.branches.some(b => b.name === 'Formulas')) {
+          mm.branches.push({ name: 'Formulas', children: formulaItems });
+        }
         const related = {};
         mm.branches.forEach(b => related[b.name] = b.children);
         container.innerHTML = renderMindmapSVG(mm.root, mm.branches.map(b => b.name), related);
-      } else if (tab === 'diagrams') {
-        container.innerHTML = renderDiagrams(window.aiData.diagrams);
       }
     }
 
@@ -1920,10 +1921,13 @@
           const subAngle = n.angle + (j+1) * subStep - (subs.length+1)*subStep/2;
           const sx = n.x + Math.cos(subAngle) * subRadius;
           const sy = n.y + Math.sin(subAngle) * subRadius;
+          const subText = typeof sub === 'object' ? sub.text : sub;
+          const subTitle = typeof sub === 'object' ? (sub.title || '') : '';
           svg += `<line class="mindmap-link" x1="${n.x}" y1="${n.y}" x2="${sx}" y2="${sy}"/>`;
           svg += `<g class="mindmap-node">
             <circle cx="${sx}" cy="${sy}" r="32" fill="white" stroke="#c4b5fd" stroke-width="2"/>
-            <text x="${sx}" y="${sy}">${wrapText(escapeHtml(sub), 9)}</text>
+            <text x="${sx}" y="${sy}">${wrapText(escapeHtml(subText), 9)}</text>
+            ${subTitle ? `<title>${escapeHtml(subTitle)}</title>` : ''}
           </g>`;
         });
       });
@@ -2750,7 +2754,7 @@
         });
       });
       HANDS_ON_ML_DATA.formulas.forEach(f => {
-        idx.push({ text: f.formula, badge: 'Formulas', action: () => { showPage('fliplearn'); renderToolTab('diagrams'); } });
+        idx.push({ text: f.formula, badge: 'Formulas', action: () => { showPage('fliplearn'); renderToolTab('mindmap'); } });
       });
       HANDS_ON_ML_DATA.mnemonics.forEach(m => {
         idx.push({ text: m.concept, badge: 'Mnemonics', action: () => { showPage('fliplearn'); renderToolTab('keyPoints'); } });
