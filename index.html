@@ -744,16 +744,6 @@
     .ask-send:hover { background: #6d28d9; }
 
     /* Gemini settings */
-    .gemini-key-row {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--bg);
-    }
-    .gemini-key-row label { font-size: 11px; font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-    .gemini-key-row input {
-      flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
-      font-size: 12px; outline: none; background: var(--surface);
-    }
-    .gemini-key-row input:focus { border-color: var(--primary); }
-
     /* Q-Bank */
     .qbank-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
     .qbank-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
@@ -1453,10 +1443,6 @@
                 <div class="fl-panel-header">
                   <div class="fl-panel-title">AI Study Tools</div>
                   <button class="btn btn-primary btn-sm" onclick="generateForChapter()">Generate for this chapter</button>
-                </div>
-                <div class="gemini-key-row">
-                  <label for="geminiKey">Gemini API Key</label>
-                  <input type="password" id="geminiKey" placeholder="Paste your Gemini API key here (optional)">
                 </div>
 
                 <div class="tabs">
@@ -2613,10 +2599,6 @@
       return document.getElementById('geminiKey')?.value.trim() || localStorage.getItem('argus_gemini_key') || '';
     }
 
-    document.getElementById('geminiKey')?.addEventListener('change', e => {
-      if (e.target.value.trim()) localStorage.setItem('argus_gemini_key', e.target.value.trim());
-    });
-
     async function callGemini(prompt, pdfText) {
       const key = getGeminiKey();
       if (!key) throw new Error('No Gemini API key provided.');
@@ -2639,9 +2621,7 @@
       const pdfText = window.pdfText || '';
       const key = getGeminiKey();
       if (!key) {
-        if (confirm('No Gemini API key set. Using static data as fallback. Add an API key?')) {
-          document.getElementById('geminiKey')?.focus();
-        }
+        alert('No AI API key set. Add a provider key in the code or use the static study data below.');
         switchTab('aiNotes');
         return;
       }
