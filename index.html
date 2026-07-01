@@ -1951,7 +1951,7 @@
     }
 
     // Mindmap zoom / pan
-    window.mindmapState = { scale: 1, panning: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 };
+    window.mindmapState = { scale: 1, panning: false, moved: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 };
     function applyMindmapTransform() {
       const content = document.getElementById('mindmapContent');
       if (content) content.style.transform = `scale(${window.mindmapState.scale})`;
@@ -1959,6 +1959,11 @@
     function mindmapZoom(dir) {
       const s = window.mindmapState;
       s.scale = dir === 'in' ? Math.min(s.scale + 0.2, 3) : Math.max(s.scale - 0.2, 0.5);
+      applyMindmapTransform();
+    }
+    function mindmapClickZoom() {
+      const s = window.mindmapState;
+      s.scale = Math.min(s.scale + 0.4, 3);
       applyMindmapTransform();
     }
     function mindmapReset() {
@@ -1981,6 +1986,7 @@
       if (!vp) return;
       const s = window.mindmapState;
       s.panning = true;
+      s.moved = false;
       s.startX = e.clientX;
       s.startY = e.clientY;
       s.scrollLeft = vp.scrollLeft;
@@ -1994,14 +2000,17 @@
       if (!s.panning) return;
       const vp = document.getElementById('mindmapViewport');
       if (!vp) return;
+      if (Math.abs(e.clientX - s.startX) > 3 || Math.abs(e.clientY - s.startY) > 3) s.moved = true;
       vp.scrollLeft = s.scrollLeft - (e.clientX - s.startX);
       vp.scrollTop = s.scrollTop - (e.clientY - s.startY);
     }
     function mindmapPanEnd() {
-      window.mindmapState.panning = false;
+      const s = window.mindmapState;
+      s.panning = false;
       const vp = document.getElementById('mindmapViewport');
       if (vp) vp.style.cursor = 'grab';
       document.removeEventListener('mousemove', mindmapPanMove);
+      if (!s.moved) mindmapClickZoom();
     }
 
     function wrapText(text, maxChars) {
