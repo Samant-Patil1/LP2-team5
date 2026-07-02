@@ -566,6 +566,15 @@
     .mindmap-controls { position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 6px; }
     .mindmap-controls button { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; width: 28px; height: 28px; font-size: 16px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); }
     .mindmap-controls button:hover { background: var(--primary-soft); color: var(--primary); }
+
+    /* AI progress */
+    .ai-progress-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; }
+    .ai-progress-card { background: var(--surface); border-radius: var(--radius); padding: 24px; width: min(360px, 90%); box-shadow: var(--shadow); text-align: center; }
+    .ai-progress-title { font-weight: 700; margin-bottom: 12px; color: var(--text); }
+    .ai-progress-bar-wrap { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+    .ai-progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.2s; }
+    .ai-progress-text { font-size: 12px; color: var(--text-muted); }
+
     .mindmap-link { stroke: #c4b5fd; stroke-width: 2; fill: none; }
     .mindmap-node { cursor: default; transition: .2s; }
     .mindmap-node:hover circle { stroke: var(--primary); stroke-width: 3; }
@@ -743,7 +752,6 @@
     }
     .ask-send:hover { background: #6d28d9; }
 
-    /* Gemini settings */
     /* Q-Bank */
     .qbank-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
     .qbank-chapters { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
@@ -1442,7 +1450,7 @@
               <div class="fl-tools">
                 <div class="fl-panel-header">
                   <div class="fl-panel-title">AI Study Tools</div>
-                  <button class="btn btn-primary btn-sm" onclick="generateForChapter()">Generate for this chapter</button>
+                  <button id="generateChapterBtn" class="btn btn-primary btn-sm" onclick="generateForChapter()">Generate for this chapter</button>
                 </div>
 
                 <div class="tabs">
@@ -2594,56 +2602,38 @@
 
     document.getElementById('answerArea')?.addEventListener('input', updateAnswerCount);
 
-    // Gemini integration
-    function getGeminiKey() {
-      return document.getElementById('geminiKey')?.value.trim() || localStorage.getItem('argus_gemini_key') || '';
-    }
-
-    async function callGemini(prompt, pdfText) {
-      const key = getGeminiKey();
-      if (!key) throw new Error('No Gemini API key provided.');
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`;
-      const body = {
-        contents: [{ parts: [{ text: `${prompt}\n\nPDF text:\n${pdfText || 'No PDF text available.'}` }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 }
-      };
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (!res.ok) throw new Error(`Gemini request failed: ${res.status}`);
-      const data = await res.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    }
-
     async function generateForChapter() {
-      const pdfText = window.pdfText || '';
-      const key = getGeminiKey();
-      if (!key) {
-        alert('No AI API key set. Add a provider key in the code or use the static study data below.');
-        switchTab('aiNotes');
+      const sourceText = window.pdfText || pdfPages.flat().map(p => p.replace(/<[^>]+>/g, '')).join('\n') || HANDS_ON_ML_DATA.summary || '';
+      if (!sourceText.trim()) {
+        alert('No chapter text available. Upload a PDF first.');
         return;
       }
-      const btn = document.querySelector('.fl-panel-header .btn-primary');
+      if (typeof window.localAIGenerate !== 'function') {
+        alert('Local AI is still loading. Please wait a few seconds and try again.');
+        return;
+      }
+      const btn = document.getElementById('generateChapterBtn');
       const original = btn?.textContent;
       if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
       try {
-        const [notes, flashcardsText, keyPointsText, flowchartText, diagramsText] = await Promise.all([
-          callGemini('Summarize the following chapter in 3-5 paragraphs suitable for student notes. Return plain text.', pdfText).catch(() => ''),
-          callGemini('Create flashcards for the following chapter. Return a JSON array of objects with "title" (short question front), "content" (back explanation), and "keywords" (array of 3-5 key terms that should appear in a good answer).', pdfText).catch(() => ''),
-          callGemini('Extract 6-10 key points from the following chapter as a bullet list. Return one point per line.', pdfText).catch(() => ''),
-          callGemini('Create a mind map / flowchart outline for the following chapter. Return JSON with root name and branches array of {name, children[]}.', pdfText).catch(() => ''),
-          callGemini('Extract important formulas, equations, or diagrams from the following chapter. Return JSON array of {formula, context}.', pdfText).catch(() => '')
-        ]);
-        if (notes) window.aiData.aiNotes = notes;
-        window.aiData.flashcards = parseFlashcards(flashcardsText);
-        window.aiData.keyPoints = parseKeyPoints(keyPointsText);
-        window.aiData.flowchart = parseFlowchart(flowchartText);
-        window.aiData.diagrams = parseDiagrams(diagramsText);
+        const data = await window.localAIGenerate(sourceText);
+        if (data.notes) window.aiData.aiNotes = data.notes;
+        window.aiData.keyPoints = data.keyPoints.length ? data.keyPoints : parseKeyPoints('');
+        window.aiData.flashcards = data.flashcards.length
+          ? data.flashcards.map(c => ({ title: c.question, content: c.answer, keywords: c.keywords || [] }))
+          : parseFlashcards('');
+        window.aiData.flowchart = data.flowchart || parseFlowchart('');
+        window.aiData.diagrams = data.diagrams.length ? data.diagrams : parseDiagrams('');
         switchTab('aiNotes');
       } catch (err) {
-        alert('Gemini generation failed: ' + err.message);
+        console.error(err);
+        alert('AI generation failed: ' + err.message + '\nFalling back to static study data.');
+        window.aiData.aiNotes = HANDS_ON_ML_DATA.summary;
+        window.aiData.keyPoints = parseKeyPoints('');
+        window.aiData.flashcards = parseFlashcards('');
+        window.aiData.flowchart = parseFlowchart('');
+        window.aiData.diagrams = parseDiagrams('');
+        switchTab('aiNotes');
       } finally {
         if (btn) { btn.textContent = original || 'Generate for this chapter'; btn.disabled = false; }
       }
@@ -2816,5 +2806,170 @@
       </div>
     </div>
   </div>
+
+  <!-- AI model loading progress -->
+  <div id="aiProgressModal" class="ai-progress-modal" style="display:none;">
+    <div class="ai-progress-card">
+      <div class="ai-progress-title">Loading local AI model</div>
+      <div class="ai-progress-bar-wrap"><div id="aiProgressBar" class="ai-progress-bar" style="width:0%"></div></div>
+      <div id="aiProgressText" class="ai-progress-text">Preparing download...</div>
+      <button class="btn btn-secondary btn-sm" style="margin-top:12px" onclick="window.cancelLocalAI && window.cancelLocalAI()">Hide</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
+    env.allowLocalModels = false;
+
+    const MODEL = 'HuggingFaceTB/SmolLM2-135M-Instruct';
+    let generatorPromise = null;
+
+    const progressModal = document.getElementById('aiProgressModal');
+    const progressBar = document.getElementById('aiProgressBar');
+    const progressText = document.getElementById('aiProgressText');
+
+    function setProgress(loaded, total, label) {
+      const pct = total > 0 ? Math.round((loaded / total) * 100) : 0;
+      if (progressBar) progressBar.style.width = pct + '%';
+      if (progressText) progressText.textContent = label || (total > 0 ? `Downloading model... ${pct}%` : 'Preparing...');
+      if (progressModal) progressModal.style.display = 'flex';
+    }
+
+    function hideProgress() {
+      if (progressModal) progressModal.style.display = 'none';
+    }
+
+    function updateProgress(data) {
+      if (!data) return;
+      if (data.status === 'progress') {
+        const mb = (n) => (n / 1024 / 1024).toFixed(1) + ' MB';
+        const label = `Downloading ${data.file || 'model'}... ${mb(data.loaded)} / ${mb(data.total)}`;
+        setProgress(data.loaded, data.total, label);
+      } else if (data.status === 'done') {
+        setProgress(1, 1, 'Download complete. Initializing model...');
+      } else if (data.status === 'ready') {
+        setProgress(1, 1, 'Model ready.');
+      }
+    }
+
+    async function ensureGenerator() {
+      if (!generatorPromise) {
+        generatorPromise = pipeline('text-generation', MODEL, {
+          dtype: 'q4',
+          progress_callback: updateProgress
+        });
+      }
+      return await generatorPromise;
+    }
+
+    function formatChat(system, user) {
+      return `<|im_start|>system\n${system}<|im_end|>\n<|im_start|>user\n${user}<|im_end|>\n<|im_start|>assistant\n`;
+    }
+
+    async function generateText(system, user, maxTokens = 256) {
+      const gen = await ensureGenerator();
+      const prompt = formatChat(system, user);
+      const out = await gen(prompt, {
+        max_new_tokens: maxTokens,
+        temperature: 0.3,
+        top_p: 0.9,
+        do_sample: true,
+        return_full_text: false
+      });
+      let text = out[0]?.generated_text || '';
+      const endIdx = text.indexOf('<|im_end|>');
+      if (endIdx !== -1) text = text.slice(0, endIdx);
+      return text.trim();
+    }
+
+    function truncateText(text, limit = 2200) {
+      if (!text) return '';
+      return text.length > limit ? text.slice(0, limit) + '\n...' : text;
+    }
+
+    function extractJson(text) {
+      const startObj = text.indexOf('{');
+      const startArr = text.indexOf('[');
+      let start = -1;
+      if (startObj !== -1 && startArr !== -1) start = Math.min(startObj, startArr);
+      else if (startObj !== -1) start = startObj;
+      else if (startArr !== -1) start = startArr;
+      if (start === -1) return null;
+      let depth = 0, inString = false, escape = false, end = -1;
+      const open = text[start];
+      const close = open === '{' ? '}' : ']';
+      for (let i = start; i < text.length; i++) {
+        const c = text[i];
+        if (escape) { escape = false; continue; }
+        if (c === '\\') { escape = true; continue; }
+        if (c === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (c === open) depth++;
+        else if (c === close) { depth--; if (depth === 0) { end = i + 1; break; } }
+      }
+      if (end === -1) return null;
+      try { return JSON.parse(text.slice(start, end)); } catch (e) { return null; }
+    }
+
+    async function generateNotes(text) {
+      const sys = 'You are a helpful study assistant. Summarize the given chapter into concise study notes using plain paragraphs.';
+      const prompt = `Summarize the following chapter into concise study notes:\n\n${truncateText(text)}`;
+      return await generateText(sys, prompt, 256);
+    }
+
+    async function generateKeyPoints(text) {
+      const sys = 'You are a helpful study assistant. Extract the most important key points as a bulleted list.';
+      const prompt = `Extract 5 to 7 key points from the following text. Use a bullet list with "- " at the start of each item:\n\n${truncateText(text)}`;
+      const out = await generateText(sys, prompt, 200);
+      return out.split('\n').map(l => l.replace(/^[-\u2022*]\s*/, '').trim()).filter(Boolean);
+    }
+
+    async function generateFlashcards(text) {
+      const sys = 'You are a helpful study assistant. Create flashcards from the text. Return ONLY a JSON array of objects with "q" and "a" fields.';
+      const prompt = `Create 5 flashcards from the following text. Return ONLY a JSON array like [{"q":"...","a":"..."}, ...].\n\n${truncateText(text)}`;
+      const out = await generateText(sys, prompt, 400);
+      const arr = extractJson(out);
+      if (Array.isArray(arr) && arr.length) return arr.slice(0, 8).map(c => ({ question: c.q || c.question || '', answer: c.a || c.answer || '', keywords: [] }));
+      return [];
+    }
+
+    async function generateMindmap(text) {
+      const sys = 'You are a helpful study assistant. Build a mind map from the text. Return ONLY JSON.';
+      const prompt = `Build a mind map from the following text. Return ONLY JSON in this exact format:\n{\n  "root": "Central topic",\n  "branches": [\n    {"name": "Branch 1", "children": ["sub 1", "sub 2"]},\n    {"name": "Branch 2", "children": ["sub 1", "sub 2"]}\n  ],\n  "formulas": [\n    {"formula": "...", "context": "..."}\n  ]\n}\nIf there are no formulas, use an empty array.\n\nText:\n${truncateText(text)}`;
+      const out = await generateText(sys, prompt, 500);
+      const obj = extractJson(out);
+      if (obj && obj.root && Array.isArray(obj.branches)) return obj;
+      return null;
+    }
+
+    window.localAIGenerate = async function(text) {
+      if (!text || text.trim().length < 30) throw new Error('Not enough text to study. Upload a PDF or open a chapter first.');
+      setProgress(0, 0, 'Loading AI model...');
+      await ensureGenerator();
+      setProgress(1, 1, 'Generating notes...');
+      const notes = await generateNotes(text);
+      setProgress(1, 1, 'Generating key points...');
+      const keyPoints = await generateKeyPoints(text);
+      setProgress(1, 1, 'Generating flashcards...');
+      const flashcards = await generateFlashcards(text);
+      setProgress(1, 1, 'Generating mind map...');
+      const mindmap = await generateMindmap(text);
+      hideProgress();
+      return {
+        notes,
+        keyPoints,
+        flashcards,
+        diagrams: Array.isArray(mindmap?.formulas) ? mindmap.formulas : [],
+        flowchart: mindmap ? {
+          root: mindmap.root,
+          branches: mindmap.branches.map(b => ({ name: b.name, children: Array.isArray(b.children) ? b.children : [] }))
+        } : null
+      };
+    };
+
+    window.cancelLocalAI = function() {
+      hideProgress();
+    };
+  </script>
 </body>
 </html>
