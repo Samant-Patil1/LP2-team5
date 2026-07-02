@@ -1524,6 +1524,9 @@
     </div>
   </div>
 
+  <!-- Load local config (API keys, etc.) — see config.example.js -->
+  <script src="config.js"></script>
+
   <script>
     const HANDS_ON_ML_DATA = {
       title: "Hands-On Machine Learning with Scikit-Learn, Keras & TensorFlow",
@@ -2444,9 +2447,12 @@
     async function explainText(text) {
       const trimmed = text.trim();
       if (!trimmed) return;
-      showExplanation('Selected sentence', 'Looking up explanation...', '');
+      showExplanation('Selected sentence', 'AI is thinking...', '');
       try {
-        const explanation = await callOnlineAI('Explain this sentence simply:\n' + trimmed);
+        const explanation = await callOnlineAI([
+          { role: 'system', content: 'You are a helpful tutor. Explain the given sentence simply for a school student in one or two sentences.' },
+          { role: 'user', content: 'Explain this sentence simply:\n' + trimmed }
+        ], { maxTokens: 200 });
         showExplanation('AI Explanation', explanation, makeMnemonic(trimmed));
         return;
       } catch (err) {
@@ -2665,10 +2671,141 @@
 
     document.getElementById('answerArea')?.addEventListener('input', updateAnswerCount);
 
-    // Stub for the online AI API. Replace this once the API details are provided.
-    async function callOnlineAI(prompt) {
-      // TODO: implement fetch call to the chosen cheap AI API.
-      throw new Error('Online AI API is not configured yet. Please provide the API endpoint and key.');
+    const OPENROUTER_MODEL = 'openai/gpt-4o';
+    const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+    function extractJson(text) {
+      const startObj = text.indexOf('{');
+      const startArr = text.indexOf('[');
+      let start = -1;
+      if (startObj !== -1 && startArr !== -1) start = Math.min(startObj, startArr);
+      else if (startObj !== -1) start = startObj;
+      else if (startArr !== -1) start = startArr;
+      if (start === -1) return null;
+      let depth = 0, inString = false, escape = false, end = -1;
+      const open = text[start];
+      const close = open === '{' ? '}' : ']';
+      for (let i = start; i < text.length; i++) {
+        const c = text[i];
+        if (escape) { escape = false; continue; }
+        if (c === '\\') { escape = true; continue; }
+        if (c === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (c === open) depth++;
+        else if (c === close) { depth--; if (depth === 0) { end = i + 1; break; } }
+      }
+      if (end === -1) return null;
+      try { return JSON.parse(text.slice(start, end)); } catch (e) { return null; }
+    }
+
+    async function callOnlineAI(messages, { jsonMode = false, maxTokens = 1000 } = {}) {
+      const key = window.OPENROUTER_KEY;
+      if (!key) throw new Error('OpenRouter API key not found. Add it to config.js.');
+      const body = {
+        model: OPENROUTER_MODEL,
+        messages,
+        temperature: 0.3,
+        max_tokens: maxTokens,
+      };
+      if (jsonMode) body.response_format = { type: 'json_object' };
+      const res = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Argus FlipLearn',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`OpenRouter error ${res.status}: ${errText}`);
+      }
+      const data = await res.json();
+      return data?.choices?.[0]?.message?.content || '';
+    }
+
+    function normalizeStudyData(data) {
+      if (!data || typeof data !== 'object') return { notes: '', keyPoints: [], flashcards: [], formulas: [], flowchart: null };
+      const notes = typeof data.notes === 'string' ? data.notes : '';
+      const keyPoints = Array.isArray(data.keyPoints)
+        ? data.keyPoints.filter(k => typeof k === 'string')
+        : [];
+      let flashcards = [];
+      if (Array.isArray(data.flashcards)) {
+        flashcards = data.flashcards.map(c => {
+          if (typeof c === 'string') return { title: c, content: '', keywords: [] };
+          const q = c.q || c.question || c.front || '';
+          const a = c.a || c.answer || c.back || '';
+          return { title: q, content: a, keywords: [] };
+        });
+      } else if (data.flashcards && typeof data.flashcards === 'object') {
+        flashcards = Object.entries(data.flashcards).map(([q, a]) => ({
+          title: q,
+          content: typeof a === 'string' ? a : '',
+          keywords: []
+        }));
+      }
+      let root = '';
+      let branches = [];
+      const mm = data.mindmap;
+      if (mm && typeof mm === 'object') {
+        root = mm.root || mm.centralTopic || mm.centralNode || mm.topic || '';
+        const rawBranches = mm.branches || mm.childNodes || mm.nodes || [];
+        branches = rawBranches.map(b => {
+          const name = b.name || b.label || b.topic || '';
+          let children = [];
+          if (Array.isArray(b.children)) {
+            children = b.children.map(ch => typeof ch === 'string' ? ch : (ch.name || ch.label || ch.description || '')).filter(Boolean);
+          } else if (Array.isArray(b.sub)) {
+            children = b.sub.filter(s => typeof s === 'string');
+          } else if (b.description) {
+            children = [b.description];
+          }
+          return { name, children };
+        }).filter(b => b.name);
+      }
+      const formulas = Array.isArray(data.formulas)
+        ? data.formulas.map(f => (typeof f === 'string' ? { formula: f, context: '' } : { formula: f.formula || '', context: f.context || f.description || '' }))
+        : [];
+      return {
+        notes,
+        keyPoints,
+        flashcards,
+        formulas,
+        flowchart: root ? { root, branches } : null
+      };
+    }
+
+    async function generateStudyDataOnline(text) {
+      const system = 'You are a helpful study assistant. Always return ONLY valid JSON matching the requested schema.';
+      const user = `Given the following chapter text, produce a JSON object with these exact fields:
+- "notes": concise study notes as a single string (3-5 paragraphs)
+- "keyPoints": array of 5-7 short strings
+- "flashcards": array of objects with "q" (question) and "a" (answer)
+- "mindmap": object with "root" (string) and "branches" (array of {name, children: string[]})
+- "formulas": array of objects with "formula" and "context" (empty array if none)
+
+Example:
+{
+  "notes": "...",
+  "keyPoints": ["..."],
+  "flashcards": [{"q":"...","a":"..."}],
+  "mindmap": {"root":"...","branches":[{"name":"...","children":["..."]}]},
+  "formulas": []
+}
+
+Return ONLY JSON.
+
+Text:
+${text.slice(0, 2000)}`;
+      const content = await callOnlineAI([
+        { role: 'system', content: system },
+        { role: 'user', content: user }
+      ], { jsonMode: true, maxTokens: 1500 });
+      const data = extractJson(content) || JSON.parse(content || '{}');
+      return normalizeStudyData(data);
     }
 
     async function generateForChapter() {
@@ -2681,12 +2818,16 @@
       const original = btn?.textContent;
       if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
       try {
-        // TODO: replace with a single batched online API call once credentials are provided.
-        // For now, this stub falls back to static study data.
-        throw new Error('Online AI API is not configured yet.');
+        const data = await generateStudyDataOnline(sourceText);
+        if (data.notes) window.aiData.aiNotes = data.notes;
+        window.aiData.keyPoints = data.keyPoints.length ? data.keyPoints : parseKeyPoints('');
+        window.aiData.flashcards = data.flashcards.length ? data.flashcards : parseFlashcards('');
+        window.aiData.flowchart = data.flowchart || parseFlowchart('');
+        window.aiData.diagrams = data.formulas.length ? data.formulas : parseDiagrams('');
+        switchTab('aiNotes');
       } catch (err) {
         console.error(err);
-        alert('Online AI is not configured yet. Using static study data for now.');
+        alert('AI generation failed: ' + err.message + '\nUsing static study data for now.');
         window.aiData.aiNotes = HANDS_ON_ML_DATA.summary;
         window.aiData.keyPoints = parseKeyPoints('');
         window.aiData.flashcards = parseFlashcards('');

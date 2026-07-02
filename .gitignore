@@ -11,3 +11,4 @@ snapshot.json
 test.pdf
 .venv/
 .env
+config.js
