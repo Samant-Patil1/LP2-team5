@@ -54,6 +54,17 @@ Open `http://localhost:8080` in a browser.
   - Type your answer and press Enter.
   - Card flips to reveal the correct answer and key terms.
 - **Q-Bank** — select one or more chapters and start a focused flashcard revision session.
+  - **Previous Year Papers (PYQs)** — browse 209 ICSE previous-year papers by subject and year. Click any paper to open it (copy PDFs into `assets/pyqs/` first).
+- **FlipLearn Chatbot** — ask questions about the current chapter, generate MCQs/PYQs, or request explanations. The chatbot uses the chapter context and relevant PYQ paper info to answer via OpenRouter.
+
+## PYQ Database
+
+- `pyq-database.json` is generated from the PDFs in `~/sam/ICSE` by running:
+  ```bash
+  python3 scripts/build_pyq_db.py
+  ```
+- It contains metadata (subject, year, paper code, title, filename) for every PDF found.
+- To make the PDFs open in the app, copy or symlink them into `assets/pyqs/<subject>/` matching the `assetPath` field.
 
 ## AI integration
 

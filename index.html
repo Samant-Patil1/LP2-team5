@@ -760,6 +760,8 @@
       color: white; display: grid; place-items: center; cursor: pointer; flex-shrink: 0;
     }
     .ask-send:hover { background: #6d28d9; }
+    .ask-response { margin-top: 12px; padding: 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text); min-height: 40px; white-space: pre-wrap; }
+    .ask-response:empty { display: none; }
 
     /* Q-Bank */
     .qbank-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
@@ -773,6 +775,20 @@
     .qbank-chapter input { margin-top: 3px; }
     .qbank-chapter-title { font-weight: 600; font-size: 13px; }
     .qbank-chapter-count { font-size: 11px; color: var(--text-muted); }
+    .pyq-filters { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+    .pyq-filters select {
+      border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+      font-size: 13px; background: var(--surface); color: var(--text); min-width: 140px;
+    }
+    .pyq-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; max-height: 320px; overflow: auto; }
+    .pyq-item {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px;
+      cursor: pointer; transition: .15s;
+    }
+    .pyq-item:hover { border-color: var(--primary); background: var(--primary-soft); }
+    .pyq-item-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+    .pyq-item-meta { font-size: 11px; color: var(--text-muted); }
+    .pyq-empty { color: var(--text-muted); font-size: 13px; padding: 10px 0; }
 
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -819,6 +835,11 @@
         <div class="nav-item" data-page="qbank">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
           <span>Q-Bank</span>
+          <span class="nav-badge">New</span>
+        </div>
+        <div class="nav-item" data-page="pyqs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>PYQs</span>
           <span class="nav-badge">New</span>
         </div>
         <div class="nav-item">
@@ -1513,6 +1534,7 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                   </button>
                 </div>
+                <div id="askResponse" class="ask-response"></div>
               </div>
             </div>
           </div>
@@ -1540,6 +1562,23 @@
               <div style="padding:16px;">
                 <div class="flashcard-stack" id="qbankStack" style="height:360px;"></div>
               </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:18px;">
+            <div class="card-header">
+              <div class="card-title">Previous Year Papers (PYQs)</div>
+            </div>
+            <div style="padding: 0 20px 18px;">
+              <div class="pyq-filters">
+                <select id="pyqSubject" onchange="renderPYQList()">
+                  <option value="">All Subjects</option>
+                </select>
+                <select id="pyqYear" onchange="renderPYQList()">
+                  <option value="">All Years</option>
+                </select>
+              </div>
+              <div id="pyqList" class="pyq-list">Loading PYQ database...</div>
             </div>
           </div>
         </div>
@@ -2255,6 +2294,75 @@
       if (emptyMsg) emptyMsg.style.display = 'block';
     }
 
+    // PYQ database integration
+    window.pyqDatabase = { papers: [], subjects: [], years: [] };
+
+    async function loadPYQDatabase() {
+      try {
+        const res = await fetch('pyq-database.json');
+        if (!res.ok) throw new Error('Failed to fetch');
+        const data = await res.json();
+        window.pyqDatabase = data || { papers: [], subjects: [], years: [] };
+        populatePYQFilters();
+        renderPYQList();
+      } catch (err) {
+        console.error('PYQ database load failed:', err);
+        const list = document.getElementById('pyqList');
+        if (list) list.innerHTML = '<div class="pyq-empty">Could not load PYQ database.</div>';
+      }
+    }
+
+    function populatePYQFilters() {
+      const subjectSel = document.getElementById('pyqSubject');
+      const yearSel = document.getElementById('pyqYear');
+      if (!subjectSel || !yearSel) return;
+      const subjects = window.pyqDatabase.subjects || [];
+      const years = window.pyqDatabase.years || [];
+      subjectSel.innerHTML = '<option value="">All Subjects</option>' + subjects.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+      yearSel.innerHTML = '<option value="">All Years</option>' + years.map(y => `<option value="${escapeHtml(y)}">${escapeHtml(y)}</option>`).join('');
+    }
+
+    function renderPYQList() {
+      const list = document.getElementById('pyqList');
+      if (!list) return;
+      const subject = document.getElementById('pyqSubject')?.value || '';
+      const year = document.getElementById('pyqYear')?.value || '';
+      const papers = (window.pyqDatabase.papers || []).filter(p => {
+        return (!subject || p.subject === subject) && (!year || String(p.year) === year);
+      });
+      if (!papers.length) {
+        list.innerHTML = '<div class="pyq-empty">No papers match the selected filters.</div>';
+        return;
+      }
+      list.innerHTML = papers.map(p => `
+        <div class="pyq-item" onclick="openPYQ('${escapeHtml(p.assetPath || '')}')">
+          <div class="pyq-item-title">${escapeHtml(p.title || p.filename || 'Untitled')}</div>
+          <div class="pyq-item-meta">${escapeHtml(p.subject || '')} • ${escapeHtml(String(p.year || ''))}${p.paperCode ? ' • Code ' + escapeHtml(p.paperCode) : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    function openPYQ(path) {
+      if (!path) return;
+      // Try to open; if the PDF has not been copied into assets/pyqs yet, show a message.
+      fetch(path, { method: 'HEAD' }).then(r => {
+        if (r.ok) window.open(path, '_blank');
+        else alert('PDF not found at ' + path + '. Copy the paper into assets/pyqs/ to open it.');
+      }).catch(() => {
+        alert('PDF not found at ' + path + '. Copy the paper into assets/pyqs/ to open it.');
+      });
+    }
+
+    function findRelevantPYQs(topic) {
+      const t = topic.toLowerCase();
+      const papers = window.pyqDatabase.papers || [];
+      return papers.filter(p =>
+        (p.subject && p.subject.toLowerCase().includes(t)) ||
+        (p.title && p.title.toLowerCase().includes(t)) ||
+        (p.subjectCode && p.subjectCode.toLowerCase().includes(t))
+      ).slice(0, 5);
+    }
+
     // PDF viewer
     window.pdfText = '';
     window.pdfPages = [];
@@ -2650,12 +2758,33 @@
       input?.focus();
     }
 
-    function sendAsk() {
+    async function sendAsk() {
       const input = document.getElementById('askInput');
+      const responseBox = document.getElementById('askResponse');
       const text = input?.value.trim();
       if (!text) return;
-      alert('Ask feature: ' + text + '\n\n(Gemini integration would respond here.)');
-      input.value = '';
+      if (responseBox) responseBox.textContent = 'Thinking...';
+      try {
+        const chapterText = window.pdfText || pdfPages.flat().map(p => p.replace(/<[^>]+>/g, '')).join('\n') || HANDS_ON_ML_DATA.summary || '';
+        const relevantPYQs = findRelevantPYQs(text);
+        const pyqContext = relevantPYQs.length
+          ? 'Relevant previous year papers:\n' + relevantPYQs.map(p => `- ${p.subject} ${p.year}: ${p.title}`).join('\n')
+          : 'No specific previous year papers found for this query.';
+        const isPYQRequest = /pyq|previous year|past paper|exam question/i.test(text);
+        const system = isPYQRequest
+          ? 'You are a helpful exam-prep assistant. Use the chapter context and previous year paper information to generate likely exam-style questions and answers.'
+          : 'You are a helpful tutor. Answer the student based on the chapter context and previous year paper information.';
+        const user = `Chapter context:\n${chapterText.slice(0, 1500)}\n\n${pyqContext}\n\nStudent question: ${text}`;
+        const answer = await callOnlineAI([
+          { role: 'system', content: system },
+          { role: 'user', content: user }
+        ], { maxTokens: 800 });
+        if (responseBox) responseBox.textContent = answer;
+      } catch (err) {
+        console.error(err);
+        if (responseBox) responseBox.textContent = 'Error: ' + err.message;
+      }
+      if (input) input.value = '';
     }
 
     function wrapSelection(textareaId, before, after) {
@@ -3045,6 +3174,7 @@ ${text.slice(0, 2000)}`;
     if (configBanner && !window.OPENROUTER_KEY) configBanner.style.display = 'flex';
     renderToolTab('aiNotes');
     renderQBankChapters();
+    loadPYQDatabase();
     initPageFromHash();
     window.addEventListener('hashchange', () => initPageFromHash());
     renderPage();
