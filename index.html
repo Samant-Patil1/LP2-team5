@@ -512,6 +512,7 @@
     }
     .pdf-text-layer > span:hover { background: var(--primary); color: transparent; opacity: 0.15; }
     .pdf-text-layer > span.highlight-sentence { background: var(--primary); color: transparent; opacity: 0.25; }
+    .sentence-highlight { background: rgba(54, 132, 204, 0.2); border-radius: 3px; padding: 0 2px; }
     .pdf-nav {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
@@ -2449,7 +2450,19 @@
     }
 
     async function explainText(text) {
-      const { title, body, mnemonic } = smartExplanation(text);
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      showExplanation('Selected sentence', 'AI is thinking...', '');
+      try {
+        if (typeof window.localAIExplain === 'function') {
+          const explanation = await window.localAIExplain(trimmed);
+          showExplanation('AI Explanation', explanation, makeMnemonic(trimmed));
+          return;
+        }
+      } catch (err) {
+        console.error('AI explanation failed:', err);
+      }
+      const { title, body, mnemonic } = smartExplanation(trimmed);
       showExplanation(title, body, mnemonic);
     }
 
@@ -2504,8 +2517,68 @@
 
     function bindParagraphClicks() {
       pdfCard.querySelectorAll('p').forEach(p => {
-        p.addEventListener('click', () => explainText(p.textContent));
+        p.addEventListener('click', (e) => {
+          const sentence = getClickedSentence(p, e.clientX, e.clientY);
+          if (sentence) {
+            highlightSentenceInParagraph(p, sentence);
+            explainText(sentence);
+          }
+        });
       });
+    }
+
+    function getClickedSentence(paragraph, x, y) {
+      let range = null;
+      if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(x, y);
+        if (pos) {
+          range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+          range.setEnd(pos.offsetNode, pos.offset);
+        }
+      } else if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(x, y);
+      }
+      if (!range) return paragraph.textContent;
+      const fullText = paragraph.innerText || paragraph.textContent;
+      let offset = 0;
+      const walker = document.createTreeWalker(paragraph, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        if (node === range.startContainer) {
+          offset += range.startOffset;
+          break;
+        }
+        offset += node.textContent.length;
+      }
+      const sentences = sentenceSplit(fullText);
+      let current = 0;
+      for (const s of sentences) {
+        const len = s.length;
+        if (offset >= current && offset <= current + len) return s.trim();
+        current += len;
+      }
+      return sentences[0]?.trim() || fullText.trim();
+    }
+
+    function highlightSentenceInParagraph(paragraph, sentence) {
+      paragraph.querySelectorAll('.sentence-highlight').forEach(el => {
+        const parent = el.parentNode;
+        parent.replaceChild(document.createTextNode(el.textContent), el);
+        parent.normalize();
+      });
+      const text = paragraph.innerText || paragraph.textContent;
+      const idx = text.indexOf(sentence);
+      if (idx === -1) return;
+      const safe = sentence.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(safe.replace(/\s+/g, '\\s+'), '');
+      const match = text.match(regex);
+      if (!match) return;
+      const matched = match[0];
+      const before = text.slice(0, text.indexOf(matched));
+      const after = text.slice(text.indexOf(matched) + matched.length);
+      const html = escapeHtml(before) + '<span class="sentence-highlight">' + escapeHtml(matched) + '</span>' + escapeHtml(after);
+      paragraph.innerHTML = html;
     }
 
     document.getElementById('pdfUpload').addEventListener('change', e => {
@@ -2933,10 +3006,21 @@
         self.postMessage({ type: 'status', message });
       }
 
+      async function generateExplanation(text) {
+        const sys = 'You are a helpful tutor. Explain the given sentence or phrase simply for a school student in one or two sentences.';
+        return await generateText(sys, 'Explain this simply:\n' + text, 120);
+      }
+
       self.onmessage = async function(e) {
-        const { text, id } = e.data;
+        const { type, text, id } = e.data;
         try {
           await ensureGenerator(reportProgress);
+          if (type === 'explain') {
+            reportStatus('Explaining...');
+            const explanation = await generateExplanation(text);
+            self.postMessage({ type: 'explained', id, explanation });
+            return;
+          }
           reportStatus('Generating notes...');
           const notes = await generateNotes(text);
           reportStatus('Generating key points...');
@@ -2966,13 +3050,17 @@
     const pending = new Map();
 
     worker.onmessage = (e) => {
-      const { type, data, message, result, error, id } = e.data;
+      const { type, data, message, result, explanation, error, id } = e.data;
       if (type === 'progress') updateProgress(data);
       else if (type === 'status') setProgress(1, 1, message);
       else if (type === 'done') {
         hideProgress();
         const p = pending.get(id);
         if (p) { pending.delete(id); p.resolve(result); }
+      } else if (type === 'explained') {
+        hideProgress();
+        const p = pending.get(id);
+        if (p) { pending.delete(id); p.resolve(explanation); }
       } else if (type === 'error') {
         hideProgress();
         const p = pending.get(id);
@@ -2992,7 +3080,17 @@
         const id = Math.random().toString(36).slice(2);
         pending.set(id, { resolve, reject });
         setProgress(0, 0, 'Loading AI worker...');
-        worker.postMessage({ text, id });
+        worker.postMessage({ type: 'generate', text, id });
+      });
+    };
+
+    window.localAIExplain = function(text) {
+      if (!text || text.trim().length < 3) return Promise.reject(new Error('No text selected.'));
+      return new Promise((resolve, reject) => {
+        const id = Math.random().toString(36).slice(2);
+        pending.set(id, { resolve, reject });
+        setProgress(0, 0, 'Loading AI worker...');
+        worker.postMessage({ type: 'explain', text, id });
       });
     };
 
