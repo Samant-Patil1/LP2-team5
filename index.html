@@ -2818,12 +2818,6 @@
   </div>
 
   <script type="module">
-    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
-    env.allowLocalModels = false;
-
-    const MODEL = 'HuggingFaceTB/SmolLM2-135M-Instruct';
-    let generatorPromise = null;
-
     const progressModal = document.getElementById('aiProgressModal');
     const progressBar = document.getElementById('aiProgressBar');
     const progressText = document.getElementById('aiProgressText');
@@ -2834,17 +2828,14 @@
       if (progressText) progressText.textContent = label || (total > 0 ? `Downloading model... ${pct}%` : 'Preparing...');
       if (progressModal) progressModal.style.display = 'flex';
     }
-
     function hideProgress() {
       if (progressModal) progressModal.style.display = 'none';
     }
-
     function updateProgress(data) {
       if (!data) return;
       if (data.status === 'progress') {
         const mb = (n) => (n / 1024 / 1024).toFixed(1) + ' MB';
-        const label = `Downloading ${data.file || 'model'}... ${mb(data.loaded)} / ${mb(data.total)}`;
-        setProgress(data.loaded, data.total, label);
+        setProgress(data.loaded, data.total, `Downloading ${data.file || 'model'}... ${mb(data.loaded)} / ${mb(data.total)}`);
       } else if (data.status === 'done') {
         setProgress(1, 1, 'Download complete. Initializing model...');
       } else if (data.status === 'ready') {
@@ -2852,119 +2843,157 @@
       }
     }
 
-    async function ensureGenerator() {
-      if (!generatorPromise) {
-        generatorPromise = pipeline('text-generation', MODEL, {
-          dtype: 'q4',
-          progress_callback: updateProgress
+    // Worker runs the model off the main thread so the page stays responsive.
+    const workerCode = `
+      import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
+      env.allowLocalModels = false;
+      const MODEL = 'HuggingFaceTB/SmolLM2-135M-Instruct';
+      let generatorPromise = null;
+
+      function truncateText(text, limit = 2200) {
+        if (!text) return '';
+        return text.length > limit ? text.slice(0, limit) + '\\n...' : text;
+      }
+      function extractJson(text) {
+        const startObj = text.indexOf('{');
+        const startArr = text.indexOf('[');
+        let start = -1;
+        if (startObj !== -1 && startArr !== -1) start = Math.min(startObj, startArr);
+        else if (startObj !== -1) start = startObj;
+        else if (startArr !== -1) start = startArr;
+        if (start === -1) return null;
+        let depth = 0, inString = false, escape = false, end = -1;
+        const open = text[start];
+        const close = open === '{' ? '}' : ']';
+        for (let i = start; i < text.length; i++) {
+          const c = text[i];
+          if (escape) { escape = false; continue; }
+          if (c === '\\\\') { escape = true; continue; }
+          if (c === '"') { inString = !inString; continue; }
+          if (inString) continue;
+          if (c === open) depth++;
+          else if (c === close) { depth--; if (depth === 0) { end = i + 1; break; } }
+        }
+        if (end === -1) return null;
+        try { return JSON.parse(text.slice(start, end)); } catch (e) { return null; }
+      }
+      function formatChat(system, user) {
+        return '<|im_start|>system\\n' + system + '<|im_end|>\\n<|im_start|>user\\n' + user + '<|im_end|>\\n<|im_start|>assistant\\n';
+      }
+      async function ensureGenerator(progress_callback) {
+        if (!generatorPromise) {
+          generatorPromise = pipeline('text-generation', MODEL, { dtype: 'q4', progress_callback });
+        }
+        return await generatorPromise;
+      }
+      async function generateText(system, user, maxTokens = 256) {
+        const gen = await ensureGenerator();
+        const prompt = formatChat(system, user);
+        const out = await gen(prompt, {
+          max_new_tokens: maxTokens,
+          temperature: 0.3,
+          top_p: 0.9,
+          do_sample: true,
+          return_full_text: false
         });
+        let text = out[0]?.generated_text || '';
+        const endIdx = text.indexOf('<|im_end|>');
+        if (endIdx !== -1) text = text.slice(0, endIdx);
+        return text.trim();
       }
-      return await generatorPromise;
-    }
-
-    function formatChat(system, user) {
-      return `<|im_start|>system\n${system}<|im_end|>\n<|im_start|>user\n${user}<|im_end|>\n<|im_start|>assistant\n`;
-    }
-
-    async function generateText(system, user, maxTokens = 256) {
-      const gen = await ensureGenerator();
-      const prompt = formatChat(system, user);
-      const out = await gen(prompt, {
-        max_new_tokens: maxTokens,
-        temperature: 0.3,
-        top_p: 0.9,
-        do_sample: true,
-        return_full_text: false
-      });
-      let text = out[0]?.generated_text || '';
-      const endIdx = text.indexOf('<|im_end|>');
-      if (endIdx !== -1) text = text.slice(0, endIdx);
-      return text.trim();
-    }
-
-    function truncateText(text, limit = 2200) {
-      if (!text) return '';
-      return text.length > limit ? text.slice(0, limit) + '\n...' : text;
-    }
-
-    function extractJson(text) {
-      const startObj = text.indexOf('{');
-      const startArr = text.indexOf('[');
-      let start = -1;
-      if (startObj !== -1 && startArr !== -1) start = Math.min(startObj, startArr);
-      else if (startObj !== -1) start = startObj;
-      else if (startArr !== -1) start = startArr;
-      if (start === -1) return null;
-      let depth = 0, inString = false, escape = false, end = -1;
-      const open = text[start];
-      const close = open === '{' ? '}' : ']';
-      for (let i = start; i < text.length; i++) {
-        const c = text[i];
-        if (escape) { escape = false; continue; }
-        if (c === '\\') { escape = true; continue; }
-        if (c === '"') { inString = !inString; continue; }
-        if (inString) continue;
-        if (c === open) depth++;
-        else if (c === close) { depth--; if (depth === 0) { end = i + 1; break; } }
+      async function generateNotes(text) {
+        const sys = 'You are a helpful study assistant. Summarize the given chapter into concise study notes using plain paragraphs.';
+        return await generateText(sys, 'Summarize the following chapter into concise study notes:\\n\\n' + truncateText(text), 256);
       }
-      if (end === -1) return null;
-      try { return JSON.parse(text.slice(start, end)); } catch (e) { return null; }
-    }
+      async function generateKeyPoints(text) {
+        const sys = 'You are a helpful study assistant. Extract the most important key points as a bulleted list.';
+        const out = await generateText(sys, 'Extract 5 to 7 key points from the following text. Use a bullet list with "- " at the start of each item:\\n\\n' + truncateText(text), 200);
+        return out.split('\\n').map(l => l.replace(/^[-\\u2022*]\\s*/, '').trim()).filter(Boolean);
+      }
+      async function generateFlashcards(text) {
+        const sys = 'You are a helpful study assistant. Create flashcards from the text. Return ONLY a JSON array of objects with "q" and "a" fields.';
+        const out = await generateText(sys, 'Create 5 flashcards from the following text. Return ONLY a JSON array like [{"q":"...","a":"..."}, ...].\\n\\n' + truncateText(text), 400);
+        const arr = extractJson(out);
+        if (Array.isArray(arr) && arr.length) return arr.slice(0, 8).map(c => ({ question: c.q || c.question || '', answer: c.a || c.answer || '', keywords: [] }));
+        return [];
+      }
+      async function generateMindmap(text) {
+        const sys = 'You are a helpful study assistant. Build a mind map from the text. Return ONLY JSON.';
+        const prompt = 'Build a mind map from the following text. Return ONLY JSON in this exact format:\\n{\\n  "root": "Central topic",\\n  "branches": [\\n    {"name": "Branch 1", "children": ["sub 1", "sub 2"]},\\n    {"name": "Branch 2", "children": ["sub 1", "sub 2"]}\\n  ],\\n  "formulas": [\\n    {"formula": "...", "context": "..."}\\n  ]\\n}\\nIf there are no formulas, use an empty array.\\n\\nText:\\n' + truncateText(text);
+        const out = await generateText(sys, prompt, 500);
+        const obj = extractJson(out);
+        if (obj && obj.root && Array.isArray(obj.branches)) return obj;
+        return null;
+      }
 
-    async function generateNotes(text) {
-      const sys = 'You are a helpful study assistant. Summarize the given chapter into concise study notes using plain paragraphs.';
-      const prompt = `Summarize the following chapter into concise study notes:\n\n${truncateText(text)}`;
-      return await generateText(sys, prompt, 256);
-    }
+      function reportProgress(data) {
+        self.postMessage({ type: 'progress', data });
+      }
+      function reportStatus(message) {
+        self.postMessage({ type: 'status', message });
+      }
 
-    async function generateKeyPoints(text) {
-      const sys = 'You are a helpful study assistant. Extract the most important key points as a bulleted list.';
-      const prompt = `Extract 5 to 7 key points from the following text. Use a bullet list with "- " at the start of each item:\n\n${truncateText(text)}`;
-      const out = await generateText(sys, prompt, 200);
-      return out.split('\n').map(l => l.replace(/^[-\u2022*]\s*/, '').trim()).filter(Boolean);
-    }
-
-    async function generateFlashcards(text) {
-      const sys = 'You are a helpful study assistant. Create flashcards from the text. Return ONLY a JSON array of objects with "q" and "a" fields.';
-      const prompt = `Create 5 flashcards from the following text. Return ONLY a JSON array like [{"q":"...","a":"..."}, ...].\n\n${truncateText(text)}`;
-      const out = await generateText(sys, prompt, 400);
-      const arr = extractJson(out);
-      if (Array.isArray(arr) && arr.length) return arr.slice(0, 8).map(c => ({ question: c.q || c.question || '', answer: c.a || c.answer || '', keywords: [] }));
-      return [];
-    }
-
-    async function generateMindmap(text) {
-      const sys = 'You are a helpful study assistant. Build a mind map from the text. Return ONLY JSON.';
-      const prompt = `Build a mind map from the following text. Return ONLY JSON in this exact format:\n{\n  "root": "Central topic",\n  "branches": [\n    {"name": "Branch 1", "children": ["sub 1", "sub 2"]},\n    {"name": "Branch 2", "children": ["sub 1", "sub 2"]}\n  ],\n  "formulas": [\n    {"formula": "...", "context": "..."}\n  ]\n}\nIf there are no formulas, use an empty array.\n\nText:\n${truncateText(text)}`;
-      const out = await generateText(sys, prompt, 500);
-      const obj = extractJson(out);
-      if (obj && obj.root && Array.isArray(obj.branches)) return obj;
-      return null;
-    }
-
-    window.localAIGenerate = async function(text) {
-      if (!text || text.trim().length < 30) throw new Error('Not enough text to study. Upload a PDF or open a chapter first.');
-      setProgress(0, 0, 'Loading AI model...');
-      await ensureGenerator();
-      setProgress(1, 1, 'Generating notes...');
-      const notes = await generateNotes(text);
-      setProgress(1, 1, 'Generating key points...');
-      const keyPoints = await generateKeyPoints(text);
-      setProgress(1, 1, 'Generating flashcards...');
-      const flashcards = await generateFlashcards(text);
-      setProgress(1, 1, 'Generating mind map...');
-      const mindmap = await generateMindmap(text);
-      hideProgress();
-      return {
-        notes,
-        keyPoints,
-        flashcards,
-        diagrams: Array.isArray(mindmap?.formulas) ? mindmap.formulas : [],
-        flowchart: mindmap ? {
-          root: mindmap.root,
-          branches: mindmap.branches.map(b => ({ name: b.name, children: Array.isArray(b.children) ? b.children : [] }))
-        } : null
+      self.onmessage = async function(e) {
+        const { text, id } = e.data;
+        try {
+          await ensureGenerator(reportProgress);
+          reportStatus('Generating notes...');
+          const notes = await generateNotes(text);
+          reportStatus('Generating key points...');
+          const keyPoints = await generateKeyPoints(text);
+          reportStatus('Generating flashcards...');
+          const flashcards = await generateFlashcards(text);
+          reportStatus('Generating mind map...');
+          const mindmap = await generateMindmap(text);
+          self.postMessage({ type: 'done', id, result: {
+            notes,
+            keyPoints,
+            flashcards,
+            diagrams: Array.isArray(mindmap?.formulas) ? mindmap.formulas : [],
+            flowchart: mindmap ? {
+              root: mindmap.root,
+              branches: mindmap.branches.map(b => ({ name: b.name, children: Array.isArray(b.children) ? b.children : [] }))
+            } : null
+          }});
+        } catch (err) {
+          self.postMessage({ type: 'error', id, error: err.message || String(err) });
+        }
       };
+    `;
+
+    const workerUrl = URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' }));
+    const worker = new Worker(workerUrl, { type: 'module' });
+    const pending = new Map();
+
+    worker.onmessage = (e) => {
+      const { type, data, message, result, error, id } = e.data;
+      if (type === 'progress') updateProgress(data);
+      else if (type === 'status') setProgress(1, 1, message);
+      else if (type === 'done') {
+        hideProgress();
+        const p = pending.get(id);
+        if (p) { pending.delete(id); p.resolve(result); }
+      } else if (type === 'error') {
+        hideProgress();
+        const p = pending.get(id);
+        if (p) { pending.delete(id); p.reject(new Error(error)); }
+      }
+    };
+
+    worker.onerror = (err) => {
+      hideProgress();
+      pending.forEach(p => p.reject(err));
+      pending.clear();
+    };
+
+    window.localAIGenerate = function(text) {
+      if (!text || text.trim().length < 30) return Promise.reject(new Error('Not enough text to study. Upload a PDF or open a chapter first.'));
+      return new Promise((resolve, reject) => {
+        const id = Math.random().toString(36).slice(2);
+        pending.set(id, { resolve, reject });
+        setProgress(0, 0, 'Loading AI worker...');
+        worker.postMessage({ text, id });
+      });
     };
 
     window.cancelLocalAI = function() {
