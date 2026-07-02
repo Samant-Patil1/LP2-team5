@@ -2909,6 +2909,10 @@
       if (data.status === 'progress') {
         const mb = (n) => (n / 1024 / 1024).toFixed(1) + ' MB';
         setProgress(data.loaded, data.total, `Downloading ${data.file || 'model'}... ${mb(data.loaded)} / ${mb(data.total)}`);
+      } else if (data.status === 'initiate') {
+        setProgress(0, 0, 'Preparing model files...');
+      } else if (data.status === 'download') {
+        setProgress(0, 0, `Starting download of ${data.file || 'model'}...`);
       } else if (data.status === 'done') {
         setProgress(1, 1, 'Download complete. Initializing model...');
       } else if (data.status === 'ready') {
@@ -2955,7 +2959,7 @@
       }
       async function ensureGenerator(progress_callback) {
         if (!generatorPromise) {
-          generatorPromise = pipeline('text-generation', MODEL, { dtype: 'q4', device: 'auto', progress_callback });
+          generatorPromise = pipeline('text-generation', MODEL, { dtype: 'q4', progress_callback });
         }
         return await generatorPromise;
       }
@@ -3014,6 +3018,7 @@
       self.onmessage = async function(e) {
         const { type, text, id } = e.data;
         try {
+          reportStatus('Loading AI model...');
           await ensureGenerator(reportProgress);
           if (type === 'explain') {
             reportStatus('Explaining...');
