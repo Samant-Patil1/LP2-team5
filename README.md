@@ -48,8 +48,8 @@ Open `http://localhost:8080` in a browser.
     - **Flashcards** — auto-generated question/answer cards.
     - **Key Points** — auto-generated bullet points.
     - **Mindmap** — auto-generated visual mind map.
-    - **Questions** — generate practice questions for any topic/sub-topic.
   - Click **Generate for this chapter** to populate all study tools from the current PDF or static chapter text.
+  - Use the **Ask / PYQ practice chatbot** at the bottom to ask anything about the chapter, generate MCQs/PYQs, get explanations, or request similar examples.
 - **Flashcards** — interactive cards covering course material.
   - Type your answer and press Enter.
   - Card flips to reveal the correct answer and key terms.
