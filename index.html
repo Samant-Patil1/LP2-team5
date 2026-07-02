@@ -2920,7 +2920,7 @@
     const workerCode = `
       import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0';
       env.allowLocalModels = false;
-      const MODEL = 'HuggingFaceTB/SmolLM2-135M-Instruct';
+      const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
       let generatorPromise = null;
 
       function truncateText(text, limit = 2200) {
@@ -2955,7 +2955,7 @@
       }
       async function ensureGenerator(progress_callback) {
         if (!generatorPromise) {
-          generatorPromise = pipeline('text-generation', MODEL, { dtype: 'q4', progress_callback });
+          generatorPromise = pipeline('text-generation', MODEL, { dtype: 'q4', device: 'auto', progress_callback });
         }
         return await generatorPromise;
       }
