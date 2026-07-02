@@ -513,6 +513,8 @@
     .pdf-text-layer > span:hover { background: var(--primary); color: transparent; opacity: 0.15; }
     .pdf-text-layer > span.highlight-sentence { background: var(--primary); color: transparent; opacity: 0.25; }
     .sentence-highlight { background: rgba(54, 132, 204, 0.2); border-radius: 3px; padding: 0 2px; }
+    .config-banner { background: #fef3c7; color: #92400e; padding: 10px 16px; font-size: 13px; display: none; justify-content: space-between; align-items: center; border-bottom: 1px solid #fde68a; }
+    .config-banner code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 4px; }
     .pdf-nav {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 16px; border-top: 1px solid var(--border); flex-shrink: 0;
@@ -567,6 +569,20 @@
     .mindmap-controls { position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 6px; }
     .mindmap-controls button { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-radius: 6px; width: 28px; height: 28px; font-size: 16px; line-height: 1; cursor: pointer; box-shadow: var(--shadow); }
     .mindmap-controls button:hover { background: var(--primary-soft); color: var(--primary); }
+
+    .practice-generator { display: flex; flex-direction: column; gap: 10px; }
+    .practice-generator .pg-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .practice-generator input {
+      flex: 1; min-width: 120px; border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 10px; font-size: 13px; background: var(--surface); color: var(--text);
+    }
+    .practice-generator input:focus { outline: none; border-color: var(--primary); }
+    .pg-output { font-size: 13px; color: var(--text); }
+    .pg-item { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 8px; }
+    .pg-q { font-weight: 600; margin-bottom: 4px; }
+    .pg-a { color: var(--text-muted); }
+    .pg-loading, .pg-error { color: var(--text-muted); font-style: italic; }
+    .pg-error { color: #dc2626; }
 
     .mindmap-link { stroke: #c4b5fd; stroke-width: 2; fill: none; }
     .mindmap-node { cursor: default; transition: .2s; }
@@ -892,6 +908,12 @@
           </div>
         </div>
       </header>
+
+      <!-- API key warning -->
+      <div id="configBanner" class="config-banner" style="display:none;">
+        <span>OpenRouter API key not found. Copy <code>config.example.js</code> to <code>config.js</code> and add your key.</span>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('configBanner').style.display='none'">Dismiss</button>
+      </div>
 
       <!-- Content -->
       <main class="content">
@@ -1451,11 +1473,13 @@
                   <div class="tab" data-tab="flashcards" onclick="switchTab('flashcards')">Flashcards</div>
                   <div class="tab" data-tab="keyPoints" onclick="switchTab('keyPoints')">Key Points <span class="tab-badge">New</span></div>
                   <div class="tab" data-tab="mindmap" onclick="switchTab('mindmap')">Mindmap</div>
+                  <div class="tab" data-tab="practiceQuestions" onclick="switchTab('practiceQuestions')">Questions</div>
                 </div>
                 <div class="tool-content active" id="aiNotes"></div>
                 <div class="tool-content" id="flashcards"></div>
                 <div class="tool-content" id="keyPoints"></div>
                 <div class="tool-content" id="mindmap"></div>
+                <div class="tool-content" id="practiceQuestions"></div>
               </div>
 
               <!-- PYQ / Ask section -->
@@ -1863,6 +1887,8 @@
         const related = {};
         mm.branches.forEach(b => related[b.name] = b.children);
         container.innerHTML = renderMindmapSVG(mm.root, mm.branches.map(b => b.name), related);
+      } else if (tab === 'practiceQuestions') {
+        container.innerHTML = renderPracticeQuestions();
       }
     }
 
@@ -2808,6 +2834,58 @@ ${text.slice(0, 2000)}`;
       return normalizeStudyData(data);
     }
 
+    async function generateQuestionsOnline(topic, subtopic) {
+      const system = 'You are a helpful exam-prep assistant. Always return ONLY valid JSON.';
+      const user = `Generate 5 practice exam questions for the topic "${topic}"${subtopic ? ' and sub-topic "' + subtopic + '"' : ''}. Return a JSON array of objects with "q" (question) and "a" (answer).`;
+      const content = await callOnlineAI([
+        { role: 'system', content: system },
+        { role: 'user', content: user }
+      ], { jsonMode: true, maxTokens: 1200 });
+      const data = extractJson(content) || JSON.parse(content || '[]');
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.questions)) return data.questions;
+      return [];
+    }
+
+    function renderPracticeQuestions() {
+      return `
+        <div class="practice-generator">
+          <div class="pg-row">
+            <input type="text" id="pgTopic" placeholder="Topic (e.g. Machine Learning)">
+            <input type="text" id="pgSubtopic" placeholder="Sub-topic (e.g. Supervised Learning)">
+            <button class="btn btn-primary btn-sm" onclick="generatePracticeQuestions()">Generate</button>
+          </div>
+          <div id="pgOutput" class="pg-output">Enter a topic and sub-topic, then click Generate.</div>
+        </div>
+      `;
+    }
+
+    async function generatePracticeQuestions() {
+      const topic = document.getElementById('pgTopic')?.value.trim();
+      const subtopic = document.getElementById('pgSubtopic')?.value.trim();
+      const output = document.getElementById('pgOutput');
+      if (!topic) { alert('Please enter a topic.'); return; }
+      if (output) output.innerHTML = '<div class="pg-loading">Generating questions...</div>';
+      try {
+        const questions = await generateQuestionsOnline(topic, subtopic);
+        if (!questions.length) {
+          if (output) output.innerHTML = '<div class="pg-error">No questions were generated. Try again.</div>';
+          return;
+        }
+        if (output) {
+          output.innerHTML = questions.map((q, i) => `
+            <div class="pg-item">
+              <div class="pg-q">${i + 1}. ${escapeHtml(q.q || q.question || '')}</div>
+              ${(q.a || q.answer) ? `<div class="pg-a">Answer: ${escapeHtml(q.a || q.answer || '')}</div>` : ''}
+            </div>
+          `).join('');
+        }
+      } catch (err) {
+        console.error(err);
+        if (output) output.innerHTML = `<div class="pg-error">${escapeHtml(err.message)}</div>`;
+      }
+    }
+
     async function generateForChapter() {
       const sourceText = window.pdfText || pdfPages.flat().map(p => p.replace(/<[^>]+>/g, '')).join('\n') || HANDS_ON_ML_DATA.summary || '';
       if (!sourceText.trim()) {
@@ -2963,6 +3041,8 @@ ${text.slice(0, 2000)}`;
     }
 
     // Init
+    const configBanner = document.getElementById('configBanner');
+    if (configBanner && !window.OPENROUTER_KEY) configBanner.style.display = 'flex';
     renderToolTab('aiNotes');
     renderQBankChapters();
     initPageFromHash();
